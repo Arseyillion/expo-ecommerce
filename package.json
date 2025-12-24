@@ -2,7 +2,7 @@
   "name": "ecommerce-app",
   "version": "1.0.0",
   "private": true,
-   "engines": {
+  "engines": {
     "node": ">=20.0.0"
   },
   "scripts": {
@@ -16,11 +16,14 @@
     "dev:backend": "cd backend && bun run dev",
     "dev:all": "npm-run-all --parallel dev:backend dev"
   },
-   "repository": {
+  "repository": {
     "type": "git",
     "url": "git+https://github.com/Arseyillion/expo-ecommerce"
   },
   "devDependencies": {
     "npm-run-all": "^4.1.5"
+  },
+  "dependencies": {
+    "@clerk/clerk-react": "^5.59.2"
   }
 }
