@@ -1,0 +1,26 @@
+{
+  "name": "ecommerce-app",
+  "version": "1.0.0",
+  "private": true,
+   "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "install": "npm run install:backend && npm run install:admin",
+    "install:backend": "cd backend && bun install",
+    "install:admin": "cd admin && bun install && bun run build",
+    "build": "npm run build:admin",
+    "build:admin": "cd admin && npm run build",
+    "start": "cd backend && bun run start",
+    "dev": "cd admin && npm run dev",
+    "dev:backend": "cd backend && bun run dev",
+    "dev:all": "npm-run-all --parallel dev:backend dev"
+  },
+   "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Arseyillion/expo-ecommerce"
+  },
+  "devDependencies": {
+    "npm-run-all": "^4.1.5"
+  }
+}
