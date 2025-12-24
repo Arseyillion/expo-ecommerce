@@ -1,13 +1,11 @@
 import express from "express"
 import path from "path"
 import { ENV } from "./config/env.js"
-import { fileURLToPath } from "url"
 
 const app = express()
 
 // Get the full path of the current file 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.resolve(__filename)
+const __dirname = path.resolve()
 
 app.get("/api/health",(req, res)=>{
     res.status(200).json({message:"success"})
