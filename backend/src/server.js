@@ -3,14 +3,21 @@ import path from "path"
 import { ENV } from "./config/env.js"
 import { connectDB } from "./config/db.js"
 import { clerkMiddleware } from "@clerk/express"
+import { serve } from "inngest/express";
+import { functions,inngest } from "./config/inngest.js"
 
 const app = express()
 
 // Get the full path of the current file 
 const __dirname = path.resolve()
 
-
+// special handling: Stripe webhook needs raw body BEFORE any body parsing middleware
+// apply raw body parser conditionally only to webhook endpoint
+app.use(express.json())
 app.use(clerkMiddleware()) // adds auth object to request
+
+// we got this from inngest documentation so there's no need to try to know it by heart
+app.use("/api/inngest", serve({client:inngest, functions}))
 
 app.get("/api/health",(req, res)=>{
     res.status(200).json({message:"success"})

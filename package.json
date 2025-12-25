@@ -1,10 +1,17 @@
 {
   "name": "ecommerce-app",
   "version": "1.0.0",
-  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Arseyillion/expo-ecommerce"
+  },
+  "devDependencies": {
+    "npm-run-all": "^4.1.5"
+  },
   "engines": {
     "node": ">=20.0.0"
   },
+  "private": true,
   "scripts": {
     "install": "npm run install:backend && npm run install:admin",
     "install:backend": "cd backend && bun install",
@@ -15,15 +22,5 @@
     "dev": "cd admin && npm run dev",
     "dev:backend": "cd backend && bun run dev",
     "dev:all": "npm-run-all --parallel dev:backend dev"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Arseyillion/expo-ecommerce"
-  },
-  "devDependencies": {
-    "npm-run-all": "^4.1.5"
-  },
-  "dependencies": {
-    "@clerk/clerk-react": "^5.59.2"
   }
 }
