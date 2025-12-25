@@ -11,8 +11,7 @@ const app = express()
 // Get the full path of the current file 
 const __dirname = path.resolve()
 
-// special handling: Stripe webhook needs raw body BEFORE any body parsing middleware
-// apply raw body parser conditionally only to webhook endpoint
+//makes it possible to handle json data in the request body
 app.use(express.json())
 app.use(clerkMiddleware()) // adds auth object to request
 

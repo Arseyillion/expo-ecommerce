@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { ENV } from "../config/env.js";
 
 const addressSchema = new mongoose.Schema({
   label: {
