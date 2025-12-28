@@ -7,6 +7,8 @@ import { serve } from "inngest/express";
 import { functions, inngest } from "./config/inngest.js";
 import { syncUser, deleteUserFromDB } from "./config/inngest.js";
 
+import adminRoutes from "./routes/admin.routes.js";
+
 const app = express();
 
 // Get the full path of the current file
@@ -22,6 +24,8 @@ app.use(
   "/api/inngest",
   serve({ client: inngest, functions:[ syncUser, deleteUserFromDB], streaming: "force", }),
 );
+
+app.use("/api/admin",adminRoutes)
 
 
 app.get("/api/health", (req, res) => {
