@@ -8,6 +8,7 @@ import { functions, inngest } from "./config/inngest.js";
 import { syncUser, deleteUserFromDB } from "./config/inngest.js";
 
 import adminRoutes from "./routes/admin.routes.js";
+import userRoutes from "./routes/user.routes.js";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use(
 );
 
 app.use("/api/admin",adminRoutes)
+app.use("/api/users",userRoutes)
 
 
 app.get("/api/health", (req, res) => {
