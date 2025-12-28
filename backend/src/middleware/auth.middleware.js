@@ -4,7 +4,7 @@ import { User } from "../models/user.model.js";
 import { ENV } from "../config/env.js";
 
 export const protectRoute = [
-    requireAuth(), // Clerk's requireAuth middlewa
+    requireAuth(), // Clerk's requireAuth middleware
     async (req, res, next) => {
         try {
             // the app.use(clerkMiddleware()); which we added in server.js is what makes it possible for us to add the req.auth() method here
