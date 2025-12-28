@@ -1,4 +1,3 @@
-import { parse } from "dotenv";
 import cloudinary from "../config/cloudinary";
 import { Product } from "../models/product.model.js";
 import { Order } from "../models/order.model.js";
@@ -34,11 +33,22 @@ export async function createProduct(req, res) {
 
         const imageUrls = uploadResults.map(result => result.secure_url);
 
+        const parsedPrice = parseFloat(price);
+        const parsedStock = parseInt(stock);
+
+        if(isNaN(parsedPrice) || isNaN(parsedStock)){
+            return res.status(400).json({message:"invalid price value"})
+        }     
+        
+        if(isNaN(parsedStock)){
+            return res.status(400).json({message:"invalid stock value"})
+        }
+
         const product = await Product.create({
             name,
             description,
-            price:parseFloat(price),
-            stock:parseInt(stock),
+            price:parsedPrice,
+            stock:parsedStock,
             category,
             images:imageUrls,
         });
@@ -53,7 +63,7 @@ export async function createProduct(req, res) {
 export async function getAllProducts(_, res) {
     // Implementation for getting all products
     try {
-        const products = (await Product.find()).sort({ createdAt: -1 }); // Sort by creation date in descending order, which means latest products first
+        const products = await Product.find().sort({ createdAt: -1 }); // Sort by creation date in descending order, which means latest products first
         return res.status(200).json({ products });
     } catch (error) {
         console.error("Error fetching products:", error);
@@ -75,7 +85,7 @@ export async function updateProduct(req, res) {
         // Update fields if they are provided in the request body
         if (name) product.name = name;
         if (description) product.description = description;
-        if (price) product.price = parseFloat(price);
+        if (price !== undefined) product.price = parseFloat(price);
         if (stock !== undefined) product.stock = parseInt(stock);
         if (category) product.category = category;
 
@@ -111,7 +121,7 @@ export async function getAllOrders(_, res) {
       .sort({ createdAt: -1 });
 
     res.status(200).json({ orders });
-    
+
   } catch (error) {
     console.error("Error in getAllOrders controller:", error);
     res.status(500).json({ error: "Internal server error" });

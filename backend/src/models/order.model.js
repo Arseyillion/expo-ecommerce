@@ -10,9 +10,11 @@ const orderItemSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    // The price field in orderItemSchema should have a minimum value constraint to prevent negative prices.
     price: {
         type: Number,
-        required: true
+        required: true,
+        min: 0
     },
     quantity: {
         type: Number,
@@ -59,12 +61,20 @@ const orderSchema = new mongoose.Schema(
         ref: "User", 
         required: true,
     },
+    // removed unique constraint from clerkId to allow multiple orders per user..The clerkId field has a unique: true constraint, which will prevent users from placing multiple orders. A user should be able to create many orders, so this constraint will cause database errors on the second order from the same user.
     clerkId:{
         type: String,  
         required: true,
-        unique: true
     },
-    orderItems: [orderItemSchema],
+    // The orderItems array should be marked as required and have a minimum length validation to prevent creating orders without any items.
+    orderItems: {
+        type:[orderItemSchema],
+        required: true,
+        validate:{
+            validator:(items)=>items.length>0,
+            message:"Order must have at least one item."
+        }
+    },
     shippingAddress: {
         type:shippingAddressSchema,
         required:true,
