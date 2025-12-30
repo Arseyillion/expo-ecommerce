@@ -6,6 +6,12 @@ export async function createReview(req, res) {
   try {
     const { productId, orderId, rating } = req.body;
 
+    if (!productId || !orderId) {
+      return res
+        .status(400)
+        .json({ error: "productId and orderId are required" });
+    }
+
     if (!rating || rating < 1 || rating > 5) {
       return res.status(400).json({ error: "Rating must be between 1 and 5" });
     }
@@ -19,11 +25,15 @@ export async function createReview(req, res) {
     }
 
     if (order.clerkId !== user.clerkId) {
-      return res.status(403).json({ error: "Not authorized to review this order" });
+      return res
+        .status(403)
+        .json({ error: "Not authorized to review this order" });
     }
 
     if (order.status !== "delivered") {
-      return res.status(400).json({ error: "Can only review delivered orders" });
+      return res
+        .status(400)
+        .json({ error: "Can only review delivered orders" });
     }
 
     // verify product is in the order
@@ -41,16 +51,57 @@ export async function createReview(req, res) {
       { new: true, upsert: true, runValidators: true }
     );
 
-    // update the product rating with atomic aggregation
-    const reviews = await Review.find({ productId });
-    const totalRating = reviews.reduce((sum, rev) => sum + rev.rating, 0);
-    const updatedProduct = await Product.findByIdAndUpdate(
-      productId,
+
+    {/**
+        The issue is with our former code is that fetching all reviews, computing the average, and then updating the product happens in separate steps, so if two users submit reviews at the same time, both might read the same “stale” reviews array and compute the same average, causing inaccurate totals.
+
+        // current code that is NOT atomic
+        const reviews = await Review.find({ productId });
+        const totalRating = reviews.reduce((sum, rev) => sum + rev.rating, 0);
+        const updatedProduct = await Product.findByIdAndUpdate(
+        productId,
+        {
+            averageRating: totalRating / reviews.length,
+            totalReviews: reviews.length,
+        },
+        { new: true, runValidators: true }
+        );
+
+    */}
+    // UPDATE THE PRODUCT RATING WITH AGGREGATION PIPELINE APPROACH
+
+    // Step 1: Compute average rating and total review count atomically
+    // We use MongoDB's aggregation pipeline to do this in a single query,
+    // which prevents race conditions when multiple users submit reviews at the same time.
+    const stats = await Review.aggregate([
+      // Match only reviews that belong to this product
+      { $match: { productId: new mongoose.Types.ObjectId(productId) } },
+
+      // Group the matched reviews and calculate:
+      // - avgRating: the average of all "rating" values
+      // - count: the total number of reviews
       {
-        averageRating: totalRating / reviews.length,
-        totalReviews: reviews.length,
+        $group: {
+          _id: null,
+          avgRating: { $avg: "$rating" },
+          count: { $sum: 1 },
+        },
       },
-      { new: true, runValidators: true }
+    ]);
+
+    // Step 2: Extract the calculated average and count from the aggregation result
+    // Use default values (0) if there are no reviews yet
+    const avgRating = stats[0]?.avgRating || 0; // Average rating for the product
+    const totalReviews = stats[0]?.count || 0; // Total number of reviews
+
+    // Step 3: Update the product document atomically
+    // We update the averageRating and totalReviews fields in one operation
+    // This ensures that even if multiple reviews are submitted at the same time,
+    // the product's stats remain consistent.
+    const updatedProduct = await Product.findByIdAndUpdate(
+      productId, // Which product to update
+      { averageRating: avgRating, totalReviews }, // Fields to update
+      { new: true, runValidators: true } // Return the updated document and validate the data
     );
 
     if (!updatedProduct) {
@@ -77,7 +128,9 @@ export async function deleteReview(req, res) {
     }
 
     if (review.userId.toString() !== user._id.toString()) {
-      return res.status(403).json({ error: "Not authorized to delete this review" });
+      return res
+        .status(403)
+        .json({ error: "Not authorized to delete this review" });
     }
 
     const productId = review.productId;
