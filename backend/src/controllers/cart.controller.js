@@ -3,7 +3,9 @@ import { Product } from "../models/product.model.js";
 
 export async function getCart(req, res) {
   try {
-    let cart = await Cart.findOne({ clerkId: req.user.clerkId }).populate("items.product");
+    let cart = await Cart.findOne({ clerkId: req.user.clerkId }).populate(
+      "items.product"
+    );
 
     if (!cart) {
       const user = req.user;
@@ -25,6 +27,10 @@ export async function getCart(req, res) {
 export async function addToCart(req, res) {
   try {
     const { productId, quantity = 1 } = req.body;
+
+    if (quantity < 1) {
+      return res.status(400).json({ error: "Quantity must be at least 1" });
+    }
 
     // validate product exists and has stock
     const product = await Product.findById(productId);
@@ -49,10 +55,12 @@ export async function addToCart(req, res) {
     }
 
     // check if item already in the cart
-    const existingItem = cart.items.find((item) => item.product.toString() === productId);
+    const existingItem = cart.items.find(
+      (item) => item.product.toString() === productId
+    );
     if (existingItem) {
-      // increment quantity by 1
-      const newQuantity = existingItem.quantity + 1;
+      // increment quantity by the requested amount
+      const newQuantity = existingItem.quantity + quantity;
       if (product.stock < newQuantity) {
         return res.status(400).json({ error: "Insufficient stock" });
       }
@@ -63,6 +71,8 @@ export async function addToCart(req, res) {
     }
 
     await cart.save();
+    // populate product details so response shape matches getCart
+    await cart.populate("items.product");
 
     res.status(200).json({ message: "Item added to cart", cart });
   } catch (error) {
@@ -85,7 +95,9 @@ export async function updateCartItem(req, res) {
       return res.status(404).json({ error: "Cart not found" });
     }
 
-    const itemIndex = cart.items.findIndex((item) => item.product.toString() === productId);
+    const itemIndex = cart.items.findIndex(
+      (item) => item.product.toString() === productId
+    );
     if (itemIndex === -1) {
       return res.status(404).json({ error: "Item not found in cart" });
     }
@@ -103,6 +115,9 @@ export async function updateCartItem(req, res) {
     cart.items[itemIndex].quantity = quantity;
     await cart.save();
 
+    // populate product details so response shape matches getCart
+    await cart.populate("items.product");
+
     res.status(200).json({ message: "Cart updated successfully", cart });
   } catch (error) {
     console.error("Error in updateCartItem controller:", error);
@@ -119,8 +134,13 @@ export async function removeFromCart(req, res) {
       return res.status(404).json({ error: "Cart not found" });
     }
 
-    cart.items = cart.items.filter((item) => item.product.toString() !== productId);
+    cart.items = cart.items.filter(
+      (item) => item.product.toString() !== productId
+    );
     await cart.save();
+
+    // populate product details so response shape matches getCart
+    await cart.populate("items.product");
 
     res.status(200).json({ message: "Item removed from cart", cart });
   } catch (error) {
@@ -138,6 +158,9 @@ export const clearCart = async (req, res) => {
 
     cart.items = [];
     await cart.save();
+
+    // populate product details so response shape matches getCart
+    await cart.populate("items.product");
 
     res.status(200).json({ message: "Cart cleared", cart });
   } catch (error) {
