@@ -2,7 +2,6 @@ import { Order } from "../models/order.model.js";
 import { Product } from "../models/product.model.js";
 import { Review } from "../models/review.model.js";
 import mongoose from "mongoose";
-import mongoose from "mongoose";
 
 export async function createOrder(req, res) {
   /**
