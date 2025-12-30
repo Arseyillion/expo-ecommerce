@@ -1,6 +1,7 @@
 import { Order } from "../models/order.model.js";
 import { Product } from "../models/product.model.js";
 import { Review } from "../models/review.model.js";
+import mongoose from "mongoose";
 
 export async function createReview(req, res) {
   try {
@@ -75,7 +76,7 @@ export async function createReview(req, res) {
     // which prevents race conditions when multiple users submit reviews at the same time.
     const stats = await Review.aggregate([
       // Match only reviews that belong to this product
-      { $match: { productId: new mongoose.Types.ObjectId(productId) } },
+      { $match: { productId: productId } },
 
       // Group the matched reviews and calculate:
       // - avgRating: the average of all "rating" values
@@ -136,12 +137,26 @@ export async function deleteReview(req, res) {
     const productId = review.productId;
     await Review.findByIdAndDelete(reviewId);
 
-    const reviews = await Review.find({ productId });
-    const totalRating = reviews.reduce((sum, rev) => sum + rev.rating, 0);
-    await Product.findByIdAndUpdate(productId, {
-      averageRating: reviews.length > 0 ? totalRating / reviews.length : 0,
-      totalReviews: reviews.length,
-    });
+       // Use aggregation pipeline to atomically compute stats
+    const stats = await Review.aggregate([
+      { $match: { productId: new mongoose.Types.ObjectId(productId) } },
+      {
+        $group: {
+          _id: null,
+          avgRating: { $avg: "$rating" },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const avgRating = stats[0]?.avgRating || 0;
+    const totalReviews = stats[0]?.count || 0;
+
+    await Product.findByIdAndUpdate(
+      productId,
+      { averageRating: avgRating, totalReviews },
+      { new: true, runValidators: true }
+    );
 
     res.status(200).json({ message: "Review deleted successfully" });
   } catch (error) {
