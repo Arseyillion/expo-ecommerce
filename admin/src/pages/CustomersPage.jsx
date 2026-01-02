@@ -11,7 +11,7 @@ function CustomersPage() {
   const customers = data?.customers || [];
 
   return (
-    <div className="spacey-6">
+    <div className="space-y-6">
       {/* HEADER */}
       <div>
         <h1 className="text-2xl font-bold">Customers</h1>
@@ -51,11 +51,21 @@ function CustomersPage() {
                       <td className="flex items-center gap-3">
                         <div className="avatar placeholder">
                           <div className="bg-primary text-primary-content rounded-full w-12">
-                            <img
-                              src={customer.imageUrl}
-                              alt={customer.name}
-                              className="w-12 h-12 rounded-full"
-                            />
+                             <div className="avatar placeholder">
+                          <div className="bg-primary text-primary-content rounded-full w-12">
+                            {customer.imageUrl ? (
+                              <img
+                                src={customer.imageUrl}
+                                alt={customer.name}
+                                className="w-12 h-12 rounded-full"
+                              />
+                            ) : (
+                              <span className="text-xl">
+                                {customer.name?.charAt(0)?.toUpperCase() || "?"}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                           </div>
                         </div>
                         <div className="font-semibold">{customer.name}</div>
