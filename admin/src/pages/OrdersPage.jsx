@@ -2,11 +2,12 @@ import { orderApi } from "../lib/api";
 import { formatDate } from "../lib/utils";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 function OrdersPage() {
   const queryClient = useQueryClient();
 
-  const { data: ordersData, isLoading } = useQuery({
+  const { data: ordersData, isLoading, isError, error } = useQuery({
     queryKey: ["orders"],
     queryFn: orderApi.getAll,
   });
@@ -16,6 +17,10 @@ function OrdersPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+    },
+    onError: (error) => {
+      console.error("Failed to update order status:", error);
+      toast.error("Failed to update order status. Please try again.");
     },
   });
 
@@ -40,6 +45,11 @@ function OrdersPage() {
             <div className="flex justify-center py-12">
               <span className="loading loading-spinner loading-lg" />
             </div>
+          ) : isError ? (
+            <div className="text-center py-12 text-error">
+              <p className="text-xl font-semibold mb-2">Failed to load orders</p>
+              <p className="text-sm">{error?.message || "Please try again later"}</p>
+            </div>
           ) : orders.length === 0 ? (
             <div className="text-center py-12 text-base-content/60">
               <p className="text-xl font-semibold mb-2">No orders yet</p>
@@ -61,7 +71,7 @@ function OrdersPage() {
 
                 <tbody>
                   {orders.map((order) => {
-                    const totalQuantity = order.orderItems.reduce(
+                    const totalQuantity = (order.orderItems || []).reduce(
                       (sum, item) => sum + item.quantity,
                       0
                     );
