@@ -66,13 +66,11 @@ export async function createProduct(req, res) {
         const parsedStock = parseInt(stock);
         console.log("🔢 Parsed values:", { parsedPrice, parsedStock });
 
-        if(isNaN(parsedPrice) || isNaN(parsedStock)){
-            console.log("❌ Parsing failed: Invalid price or stock");
+        if(isNaN(parsedPrice) ){
             return res.status(400).json({message:"invalid price value"})
         }     
         
         if(isNaN(parsedStock)){
-            console.log("❌ Parsing failed: Invalid stock");
             return res.status(400).json({message:"invalid stock value"})
         }
         console.log("✅ Value parsing passed");

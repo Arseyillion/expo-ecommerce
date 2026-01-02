@@ -63,6 +63,10 @@ function ProductsPage() {
       stock: "",
       description: "",
     });
+    // revoke blob URLs to prevent memory leaks
+    imagePreviews.forEach((url) => {
+      if (url.startsWith("blob:")) URL.revokeObjectURL(url);
+    });
     setImages([]);
     setImagePreviews([]);
   };
@@ -143,7 +147,10 @@ function ProductsPage() {
                 <div className="flex items-center gap-6">
                   <div className="avatar">
                     <div className="w-20 rounded-xl">
-                      <img src={product.images[0]} alt={product.name} />
+                       <img 
+                        src={product.images?.[0] || "/placeholder.png"} 
+                        alt={product.name} 
+                      />
                     </div>
                   </div>
 
@@ -194,7 +201,7 @@ function ProductsPage() {
 
       {/* ADD/EDIT PRODUCT MODAL */}
 
-      <input type="checkbox" className="modal-toggle" checked={showModal} />
+      <input type="checkbox" className="modal-toggle" checked={showModal} readOnly/>
 
       <div className="modal">
         <div className="modal-box max-w-2xl">
