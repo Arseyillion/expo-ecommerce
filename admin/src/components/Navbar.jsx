@@ -18,6 +18,7 @@ export const NAVIGATION = [
 ];
 
 function Navbar() {
+  // why are we using useLocation here? to get the current path
   const location = useLocation();
 
   return (
@@ -28,6 +29,7 @@ function Navbar() {
 
       <div className="flex-1 px-4">
         <h1 className="text-xl font-bold">
+          {/* THE EFFECT OF THIS IN THE UI IS WHICH EVER PAGE YOU ARE IN YOU WILL SEE THE NAME OF THE PAGE AT THE TOP */}
           {NAVIGATION.find((item) => item.path === location.pathname)?.name || "Dashboard"}
         </h1>
       </div>
