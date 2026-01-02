@@ -1,6 +1,8 @@
 import { useUser } from "@clerk/clerk-react";
 import { ShoppingBagIcon } from "lucide-react";
 import { Link, useLocation } from "react-router";
+
+// WE ARE IMPORTING NAVIGATION FROM NAVBAR TO USE THE SAME NAVIGATION ITEMS IN THE SIDEBAR BECAUSE THAT IS WHERE WE LISTED THE VARIOUS PAGES
 import { NAVIGATION } from "./Navbar";
 
 function Sidebar() {

@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "dev": "bun --watch src/server.js",
-    "start": "bun src/server.js"
+    "start": "bun src/server.js",
+    "seed": "bun src/seeds/index.js"
   },
   "devDependencies": {
     "@types/bun": "latest"
