@@ -9,6 +9,23 @@ import { Toaster } from 'sonner'
 // added after tanstack installaton
 import { QueryClient, QueryClientProvider} from '@tanstack/react-query'
 
+import * as Sentry from "@sentry/react";
+
+if (!import.meta.env.VITE_SENTRY_DSN) {
+  console.warn('VITE_SENTRY_DSN not configured, Sentry will not be initialized');
+} else {
+ Sentry.init({
+   dsn: import.meta.env.VITE_SENTRY_DSN,
+   sendDefaultPii: true, 
+   enableLogs: true, 
+   integrations: [
+      Sentry.replayIntegration(),
+    ],
+    replaysSessionSampleRate: import.meta.env.DEV ? 1.0 : 0.1, // 100% in dev, 10% in prod
+    replaysOnErrorSampleRate: 1.0, // Always capture sessions with errors
+ });
+  }
+
 // import your publishable key 
 const PUBLISHABLE_KEY= import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 
