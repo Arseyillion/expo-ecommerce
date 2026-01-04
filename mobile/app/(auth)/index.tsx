@@ -5,11 +5,10 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import useSociallAuth from "@/hooks/useSociallAuth";
-import { useState } from "react";
+import useSocialAuth from "@/hooks/useSocialAuth";
 
 export default function AuthScreen() {
-  const { loadingProvider, handleSocialAuth } = useSociallAuth();
+  const { loadingProvider, handleSocialAuth } = useSocialAuth();
   
   const isGoogleLoading = loadingProvider === "oauth_google";
   const isAppleLoading = loadingProvider === "oauth_apple" ;
@@ -27,7 +26,7 @@ export default function AuthScreen() {
       {/* GOOGLE SIGN IN */}
       <View className="gap-2 mb-3">
         <TouchableOpacity
-          className="flex-row items-center justify-center bg-white border border-gray-300 rounded-full px-6 py-2"
+          className="flex-row items-center justify-center bg-white border border-gray-300 rounded-full px-6 py-3"
           onPress={() => handleSocialAuth("oauth_google")}
           disabled={isAnyLoading}
           style={{
