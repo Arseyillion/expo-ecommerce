@@ -18,6 +18,9 @@ if (!import.meta.env.VITE_SENTRY_DSN) {
    dsn: import.meta.env.VITE_SENTRY_DSN,
    sendDefaultPii: true, 
    enableLogs: true, 
+   integrations: [
+      Sentry.replayIntegration(),
+    ],
     replaysSessionSampleRate: import.meta.env.DEV ? 1.0 : 0.1, // 100% in dev, 10% in prod
     replaysOnErrorSampleRate: 1.0, // Always capture sessions with errors
  });

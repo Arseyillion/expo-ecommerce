@@ -13,6 +13,7 @@ const queryClient = new QueryClient();
 export default function RootLayout() {
   return (
     <ClerkProvider
+      publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!}
       tokenCache={tokenCache}
     >
       <QueryClientProvider client={queryClient}>

@@ -16,7 +16,8 @@ function CustomersPage() {
       <div>
         <h1 className="text-2xl font-bold">Customers</h1>
         <p className="text-base-content/70 mt-1">
-          {customers.length} {customers.length === 1 ? "customer" : "customers"} registered
+          {customers.length} {customers.length === 1 ? "customer" : "customers"}{" "}
+          registered
         </p>
       </div>
 
@@ -30,7 +31,9 @@ function CustomersPage() {
           ) : customers.length === 0 ? (
             <div className="text-center py-12 text-base-content/60">
               <p className="text-xl font-semibold mb-2">No customers yet</p>
-              <p className="text-sm">Customers will appear here once they sign up</p>
+              <p className="text-sm">
+                Customers will appear here once they sign up
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -51,8 +54,6 @@ function CustomersPage() {
                       <td className="flex items-center gap-3">
                         <div className="avatar placeholder">
                           <div className="bg-primary text-primary-content rounded-full w-12">
-                             <div className="avatar placeholder">
-                          <div className="bg-primary text-primary-content rounded-full w-12">
                             {customer.imageUrl ? (
                               <img
                                 src={customer.imageUrl}
@@ -66,27 +67,27 @@ function CustomersPage() {
                             )}
                           </div>
                         </div>
-                          </div>
-                        </div>
                         <div className="font-semibold">{customer.name}</div>
                       </td>
 
                       <td>{customer.email}</td>
 
                       <td>
-                        <div className="badge badge-ghost">
+                        <div className="badge badge-ghost whitespace-nowrap">
                           {customer.addresses?.length || 0} address(es)
                         </div>
                       </td>
 
                       <td>
-                        <div className="badge badge-ghost">
+                        <div className="badge badge-ghost  whitespace-nowrap">
                           {customer.wishlist?.length || 0} item(s)
                         </div>
                       </td>
 
                       <td>
-                        <span className="text-sm opacity-60">{formatDate(customer.createdAt)}</span>
+                        <span className="text-sm opacity-60  whitespace-nowrap">
+                          {formatDate(customer.createdAt)}
+                        </span>
                       </td>
                     </tr>
                   ))}
