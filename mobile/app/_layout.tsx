@@ -17,7 +17,7 @@ export default function RootLayout() {
       tokenCache={tokenCache}
     >
       <QueryClientProvider client={queryClient}>
-        <Stack />
+        <Stack screenOptions={{headerShown:false}} />
       </QueryClientProvider>
     </ClerkProvider>
   );
