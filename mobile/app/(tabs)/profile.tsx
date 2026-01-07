@@ -1,12 +1,11 @@
 import SafeScreen from "@/components/safescreen";
-import React, { PureComponent } from "react";
 import { Text, View } from "react-native";
 import { useUser, useAuth } from "@clerk/clerk-expo";
 import { ScrollView, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Image } from "expo-image";
-
+import { Alert } from "react-native";
 
 const MENU_ITEMS = [
   {
@@ -46,7 +45,15 @@ function ProfileScreen() {
   const handleMenuPress = (action: (typeof MENU_ITEMS)[number]["action"]) => {
     // TODO: make it possible for users to edit their profile information
     if (action === "/profile") return null;
-     router.push(action);
+    router.push(action);
+  };
+
+  const addAlpha = (hexColor: string, alpha: string) => {
+    if (!hexColor.startsWith("#")) {
+      console.warn(`Color ${hexColor} is not a hex value`);
+      return hexColor;
+    }
+    return hexColor + alpha;
   };
   return (
     <SafeScreen>
@@ -62,6 +69,7 @@ function ProfileScreen() {
               <View className="relative">
                 <Image
                   source={user?.imageUrl}
+                   placeholder={{blurhash: "..."}}
                   style={{ width: 80, height: 80, borderRadius: 40 }}
                   transition={200}
                 />
@@ -86,6 +94,9 @@ function ProfileScreen() {
         <View className="flex-row flex-wrap gap-2 mx-6 mb-3">
           {MENU_ITEMS.map((item) => (
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={item.title}
+              accessibilityHint={`Navigate to ${item.title}`}
               key={item.id}
               className="bg-surface rounded-2xl p-6 items-center justify-center"
               style={{ width: "48%" }}
@@ -94,7 +105,7 @@ function ProfileScreen() {
             >
               <View
                 className="rounded-full w-16 h-16 items-center justify-center mb-4"
-                style={{ backgroundColor: item.color + "20" }}
+                style={{ backgroundColor: addAlpha(item.color, "20") }}
               >
                 <Ionicons name={item.icon} size={28} color={item.color} />
               </View>
@@ -150,7 +161,13 @@ function ProfileScreen() {
         <TouchableOpacity
           className="mx-6 mb-3 bg-surface rounded-2xl py-5 flex-row items-center justify-center border-2 border-red-500/20"
           activeOpacity={0.8}
-          onPress={() => signOut()}
+          onPress={async () => {
+            try {
+              await signOut();
+            } catch (error) {
+              Alert.alert("Sign Out Failed", "Please try again.");
+            }
+          }}
         >
           <Ionicons name="log-out-outline" size={22} color="#EF4444" />
           <Text className="text-red-500 font-bold text-base ml-2">
