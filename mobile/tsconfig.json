@@ -1,7 +1,12 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
+    "module": "node16",
     "strict": true,
+    "esModuleInterop": true,
+    "allowJs": true,
+    "moduleResolution": "node16",
+    "target": "esnext",
     "paths": {
       "@/*": [
         "./*"
@@ -13,6 +18,7 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
-    "nativewind-env.d.ts"
+    "nativewind-env.d.ts",
+    "declarations.d.ts"
   ]
 }

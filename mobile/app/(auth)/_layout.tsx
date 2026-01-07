@@ -9,7 +9,7 @@ export default function AuthRoutesLayout() {
   }
 
   if (isSignedIn) {
-    return <Redirect href={'/'} />
+    return <Redirect href={"/(tabs)"} />
   }
 
 // headerShown false to hide the header on auth screens
