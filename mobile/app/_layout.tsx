@@ -44,7 +44,7 @@ const queryClient = new QueryClient({
       Sentry.captureException(error, {
         tags: {
           type: "react-query-error",
-          queryKey: query.queryKey[0]?.toString() || "unknon",
+          queryKey: query.queryKey[0]?.toString() || "unknown",
         },
         extra: {
           errorMessage: error.message,

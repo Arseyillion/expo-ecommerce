@@ -15,8 +15,8 @@ import useWishlist from "@/hooks/useWishlist";
 import useCart from "@/hooks/useCart";
 
 interface ProductsGridProps {
-  isLoading: Boolean;
-  isError: Boolean;
+  isLoading: boolean;
+  isError: boolean;
   products: Product[];
 }
 
@@ -119,7 +119,7 @@ export default function ProductsGrid({
         {/* the product image */}
         <Image
           // we use uri because image is coming from a remote url
-          source={{ uri: product.images[0] }}
+          source={{ uri: product.images?.[0] ?? '' }}
           className="w-full h-44 bg-background-lighter"
           resizeMode="cover"
         />
