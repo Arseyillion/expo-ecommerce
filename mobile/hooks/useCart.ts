@@ -20,10 +20,15 @@ const useCart = () => {
 
   const addToCartMutation = useMutation({
     mutationFn: async ({ productId, quantity = 1 }: { productId: string; quantity?: number }) => {
+       console.log(`the product id in useCart function ${productId}`)
+    console.log(`the product quantity in useCart function ${quantity}`)
       const { data } = await api.post<{ cart: Cart }>("/cart", { productId, quantity });
       return data.cart;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["cart"] }),
+    onError: (error) => {
+      console.error(`this is the error ${error.message}`)
+    }
   });
 
   const updateQuantityMutation = useMutation({
