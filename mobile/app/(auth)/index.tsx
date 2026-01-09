@@ -6,6 +6,8 @@ import {
   ActivityIndicator,
 } from "react-native";
 import useSocialAuth from "@/hooks/useSocialAuth";
+import NetInfo from "@react-native-community/netinfo";
+
 
 export default function AuthScreen() {
   const { loadingProvider, handleSocialAuth } = useSocialAuth();

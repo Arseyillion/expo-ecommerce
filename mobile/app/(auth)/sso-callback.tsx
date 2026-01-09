@@ -9,7 +9,6 @@ export default function SSOCallback() {
 
   useEffect(() => {
     if (!isLoaded) return;
-
     // Wait a bit for Clerk to process the SSO callback
     const timer = setTimeout(() => {
       if (isSignedIn) {
@@ -19,7 +18,6 @@ export default function SSOCallback() {
         router.replace("/(auth)");
       }
     }, 1000);
-
     return () => clearTimeout(timer);
   }, [isLoaded, isSignedIn, router]);
 

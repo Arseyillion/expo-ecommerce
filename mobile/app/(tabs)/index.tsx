@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import ProductsGrid from "@/components/ProductsGrid";
 import useProducts from "@/hooks/useProducts";
-import * as Sentry from '@sentry/react-native';
 
 // todo: in the payment section use sentry logs to track payment error
 function ShopScreen() {
