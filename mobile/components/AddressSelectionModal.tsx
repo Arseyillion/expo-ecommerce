@@ -1,4 +1,4 @@
-import { useAddresses } from "@/hooks/useAddressess";
+import { useAddresses } from "@/hooks/useAddresses";
 import { Address } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";

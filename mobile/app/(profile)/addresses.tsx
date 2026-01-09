@@ -2,7 +2,7 @@ import AddressCard from "@/components/AddressCard";
 import AddressesHeader from "@/components/AddressesHeader";
 import AddressFormModal from "@/components/AddressFormModal";
 import SafeScreen from "@/components/safescreen";
-import { useAddresses } from "@/hooks/useAddressess";
+import { useAddresses } from "@/hooks/useAddresses";
 import { Address } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
@@ -64,7 +64,7 @@ function AddressesScreen() {
   };
 
   const handleDeleteAddress = (addressId: string, label: string) => {
-    Alert.alert("Delete Address", `Are you sure you want to delete ${label}`, [
+    Alert.alert("Delete Address", `Are you sure you want to delete ${label}?`, [
       { text: "Cancel", style: "cancel" },
       { text: "Delete", style: "destructive", onPress: () => deleteAddress(addressId) },
     ]);
