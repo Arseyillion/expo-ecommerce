@@ -43,6 +43,8 @@ function wishlist() {
     );
   };
 
+
+
   if (isLoading) return <LoadingUI />;
   if (isError) return <ErrorUI />;
 
@@ -94,7 +96,8 @@ function wishlist() {
               >
                 <View className="flex-row p-4">
                   <Image
-                    source={item.images[0]}
+                    source={item.images?.[0]}
+                     placeholder={require("../../assets/images/placeholder.png")}
                     className="rounded-2xl bg-background-lighter"
                     style={{ width: 96, height: 96, borderRadius: 8 }}
                   />
@@ -107,7 +110,7 @@ function wishlist() {
                       {item.name}
                     </Text>
                     <Text className="text-primary font-bold text-xl mb-2">
-                      ${item.price.toFixed(2)}
+                      ${item.price?.toFixed(2) || "N/A"}
                     </Text>
 
                     {item.stock > 0 ? (
