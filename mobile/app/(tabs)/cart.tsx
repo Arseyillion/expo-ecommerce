@@ -112,7 +112,7 @@ const CartScreen = () => {
   const handleProceedWithPayment = async (selectedAddress: Address) => {
     setAddressModalVisible(false);
 
-    // log chechkout initiated
+    // log checkout initiated
     Sentry.logger.info("Checkout initiated", {
       itemCount: cartItemCount,
       total: total.toFixed(2),
@@ -225,7 +225,7 @@ const CartScreen = () => {
                   {/* product image */}
                   <View className="relative">
                     <Image
-                      source={item.product.images[0]}
+                      source={item?.product?.images?.[0]}
                       className="bg-background-lighter"
                       contentFit="cover"
                       style={{ width: 112, height: 112, borderRadius: 16 }}

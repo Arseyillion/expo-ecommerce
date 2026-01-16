@@ -273,12 +273,6 @@ export async function handleWebhook(req, res) {
         return res.status(400).json({ error: "Shipping address is required" });
       }
 
-      const shippingJSON = JSON.stringify(shippingAddress);
-      if (shippingJSON.length > 500) {
-        return res.status(400).json({ error: "Shipping address is too long" });
-      }
-      metadata.shippingAddress = shippingJSON;
-      // Check if order already exists (prevent duplicates)
       const existingOrder = await Order.findOne({
         "paymentResult.id": paymentIntent.id,
       });
