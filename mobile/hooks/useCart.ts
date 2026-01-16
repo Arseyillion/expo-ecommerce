@@ -26,9 +26,6 @@ const useCart = () => {
       return data.cart;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["cart"] }),
-    onError: (error) => {
-      console.error(`this is the error ${error.message}`)
-    }
   });
 
   const updateQuantityMutation = useMutation({
@@ -66,10 +63,11 @@ const useCart = () => {
     isError,
     cartTotal,
     cartItemCount,
-    addToCart: addToCartMutation.mutate,
-    updateQuantity: updateQuantityMutation.mutate,
-    removeFromCart: removeFromCartMutation.mutate,
-    clearCart: clearCartMutation.mutate,
+    // expose async variants so callers can `await` and keep UI in sync
+    addToCart: addToCartMutation.mutateAsync,
+    updateQuantity: updateQuantityMutation.mutateAsync,
+    removeFromCart: removeFromCartMutation.mutateAsync,
+    clearCart: clearCartMutation.mutateAsync,
     isAddingToCart: addToCartMutation.isPending,
     isUpdating: updateQuantityMutation.isPending,
     isRemoving: removeFromCartMutation.isPending,

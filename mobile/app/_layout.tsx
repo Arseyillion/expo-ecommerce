@@ -14,6 +14,8 @@ import * as NavigationBar from "expo-navigation-bar";
 import { useEffect } from "react";
 import { Platform } from "react-native";
 import * as Sentry from "@sentry/react-native";
+import { StripeProvider } from '@stripe/stripe-react-native'
+ 
 
 
 Sentry.init({
@@ -94,14 +96,18 @@ export default Sentry.wrap(function RootLayout() {
       publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!}
       tokenCache={tokenCache}
     >
-      <QueryClientProvider client={queryClient}>
-        {/* SYSTEM UI FIX: StatusBar with light content style
-            - style="light" makes status bar icons/text white (visible on dark background)
-            - This fixes the issue where time/notifications become invisible on dark backgrounds
-            - The StatusBar component handles both iOS and Android automatically */}
+      <StripeProvider
+        publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY!}
+      >
+        <QueryClientProvider client={queryClient}>
+          {/* SYSTEM UI FIX: StatusBar with light content style
+              - style="light" makes status bar icons/text white (visible on dark background)
+              - This fixes the issue where time/notifications become invisible on dark backgrounds
+              - The StatusBar component handles both iOS and Android automatically */}
         <StatusBar style="light" />
         <Stack screenOptions={{ headerShown: false }} />
       </QueryClientProvider>
+      </StripeProvider>
     </ClerkProvider>
   );
 });
