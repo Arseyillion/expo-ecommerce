@@ -110,9 +110,14 @@ export async function createPaymentIntent(req, res) {
     const validatedItems = [];
 
     for (const item of cartItems) {
+      if (!Number.isInteger(item.quantity) || item.quantity <= 0) {
+        return res.status(400).json({ error: "Invalid item quantity" });
+      }
       const product = await Product.findById(item.product._id);
       if (!product) {
-        return res.status(404).json({ error: `Product ${item.product?.name} not found` });
+        return res
+          .status(404)
+          .json({ error: `Product ${item.product?.name} not found` });
       }
 
       if (product.stock < item.quantity) {
@@ -166,7 +171,7 @@ export async function createPaymentIntent(req, res) {
 
     // Compact summary: productId:qty,productId:qty
     const compactItems = validatedItems
-      .map(i => `${i.productId}:${i.quantity}`)
+      .map((i) => `${i.productId}:${i.quantity}`)
       .join(",");
 
     const metadata = {
@@ -182,13 +187,17 @@ export async function createPaymentIntent(req, res) {
       metadata.orderSummary = compactItems;
     }
 
-     // Add shipping address (also subject to 500 char limit)
-    const shippingJSON = JSON.stringify(shippingAddress);
-    if (shippingJSON.length <= 500) {
-      metadata.shippingAddress = shippingJSON;
+    // Add shipping address (also subject to 500 char limit)
+    if (shippingAddress) {
+      const shippingJSON = JSON.stringify(shippingAddress);
+      if (shippingJSON.length <= 500) {
+        metadata.shippingAddress = shippingJSON;
+      } else {
+        // Consider storing address ID or truncating if too long
+        console.warn("[payment] shippingAddress exceeds metadata limit");
+      }
     } else {
-      // Consider storing address ID or truncating if too long
-      console.warn("[payment] shippingAddress exceeds metadata limit");
+      console.warn("[payment] No shippingAddress provided");
     }
 
     // Log metadata sizes (debugging only)
@@ -217,13 +226,16 @@ export async function createPaymentIntent(req, res) {
   }
 }
 
-
 export async function handleWebhook(req, res) {
   const sig = req.headers["stripe-signature"];
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, ENV.STRIPE_WEBHOOK_SECRET);
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      ENV.STRIPE_WEBHOOK_SECRET
+    );
   } catch (err) {
     console.error("Webhook signature verification failed:", err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
@@ -235,10 +247,22 @@ export async function handleWebhook(req, res) {
     console.log("Payment succeeded:", paymentIntent.id);
 
     try {
-      const { userId, clerkId, orderItems, orderSummary, shippingAddress, totalPrice } = paymentIntent.metadata;
+      const {
+        userId,
+        clerkId,
+        orderItems,
+        orderSummary,
+        shippingAddress,
+        totalPrice,
+      } = paymentIntent.metadata;
 
+      if (!shippingAddress) {
+        throw new Error("Missing shippingAddress in metadata");
+      }
       // Check if order already exists (prevent duplicates)
-      const existingOrder = await Order.findOne({ "paymentResult.id": paymentIntent.id });
+      const existingOrder = await Order.findOne({
+        "paymentResult.id": paymentIntent.id,
+      });
       if (existingOrder) {
         console.log("Order already exists for payment:", paymentIntent.id);
         return res.json({ received: true });
@@ -292,7 +316,7 @@ export async function handleWebhook(req, res) {
         totalPrice: parseFloat(totalPrice),
       });
 
-      // FORMER CODE TO UPDATE PRODUCT STOCK. WE ARE CHANGING ACCORDNG TO CODERABBIT THE WEBHOOK HANDLER DOESNT SUPPORT COMPACT ORDER SUMMARY 
+      // FORMER CODE TO UPDATE PRODUCT STOCK. WE ARE CHANGING ACCORDNG TO CODERABBIT THE WEBHOOK HANDLER DOESNT SUPPORT COMPACT ORDER SUMMARY
       // update product stock
       // const items = JSON.parse(orderItems);
       // for (const item of items) {
@@ -311,6 +335,7 @@ export async function handleWebhook(req, res) {
       console.log("Order created successfully:", order._id);
     } catch (error) {
       console.error("Error creating order from webhook:", error);
+      return res.status(500).json({ received: false });
     }
   }
 

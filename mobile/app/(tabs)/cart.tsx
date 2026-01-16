@@ -68,6 +68,8 @@ const CartScreen = () => {
     try {
       setQuantityLoading({ productId, action });
       await updateQuantity({ productId, quantity: newQuantity });
+    } catch (error) {
+      Alert.alert("Error", "Failed to update quantity. Please try again.");
     } finally {
       setQuantityLoading(null);
     }
@@ -79,7 +81,13 @@ const CartScreen = () => {
       {
         text: "Remove",
         style: "destructive",
-        onPress: () => removeFromCart(productId),
+         onPress: async () => {
+          try {
+            await removeFromCart(productId);
+          } catch {
+            Alert.alert("Error", "Failed to remove item.");
+          }
+        },
       },
     ]);
   };
@@ -129,7 +137,7 @@ const CartScreen = () => {
 
       const { error: initError } = await initPaymentSheet({
         paymentIntentClientSecret: data.clientSecret,
-        merchantDisplayName: "Your Store Name",
+        merchantDisplayName: process.env.PUBLIC_MERCHANT_DISPLAY_NAME || "My Store",
       });
 
       if (initError) {
@@ -378,7 +386,7 @@ export default CartScreen;
 function LoadingUI() {
   return (
     <View className="flex-1 bg-background items-center justify-center">
-      <ActivityIndicator size="large" color="#00D9FF" />
+      <ActivityIndicator size="large" color="#1DB954" />
       <Text className="text-text-secondary mt-4">Loading cart...</Text>
     </View>
   );
