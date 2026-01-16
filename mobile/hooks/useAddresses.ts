@@ -1,17 +1,26 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApi } from "@/lib/api";
 import { Address } from "@/types";
+import { useAuth } from "@clerk/clerk-expo";
 
 export const useAddresses = () => {
   const api = useApi();
   const queryClient = useQueryClient();
+  const {userId} = useAuth()
+  // IMPORTANT:
+// Scope the query cache by user ID to prevent leaking a previous user's
+// addresses after logout/login. Also guard the query with `enabled` so it
+// doesn't run before authentication completes.
+
+  const addressesQuerykey = ["addresses", userId];
 
   const {
     data: addresses,
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["addresses"],
+    queryKey: addressesQuerykey,
+    enabled: !!userId,
     queryFn: async () => {
       const { data } = await api.get<{ addresses: Address[] }>("/users/addresses");
       return data.addresses;
@@ -25,7 +34,7 @@ export const useAddresses = () => {
       return data.addresses;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["addresses"] });
+      queryClient.invalidateQueries({ queryKey: addressesQuerykey });
     },
   });
 
@@ -45,7 +54,7 @@ export const useAddresses = () => {
       return data.addresses;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["addresses"] });
+      queryClient.invalidateQueries({ queryKey: addressesQuerykey });
     },
   });
 
@@ -55,7 +64,7 @@ export const useAddresses = () => {
       return data.addresses;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["addresses"] });
+      queryClient.invalidateQueries({ queryKey: addressesQuerykey });
     },
   });
 

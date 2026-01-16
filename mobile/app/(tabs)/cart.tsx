@@ -34,7 +34,7 @@ const CartScreen = () => {
     removeFromCart,
     updateQuantity,
   } = useCart();
-  const { addresses } = useAddresses();
+  const { addresses, isLoading: addressesLoading } = useAddresses();
 
 
   
@@ -87,7 +87,7 @@ const CartScreen = () => {
   const handleCheckout = () => {
     if (cartItems.length === 0) return;
 
-    // check if user has addresses
+    
     if (!addresses || addresses.length === 0) {
       Alert.alert(
         "No Address",
@@ -346,10 +346,10 @@ const CartScreen = () => {
           className="bg-primary rounded-2xl overflow-hidden"
           activeOpacity={0.9}
           onPress={handleCheckout}
-          disabled={paymentLoading}
+          disabled={paymentLoading || addressesLoading}
         >
           <View className="py-5 flex-row items-center justify-center">
-            {paymentLoading ? (
+            {paymentLoading || addressesLoading ? (
               <ActivityIndicator size="small" color="#121212" />
             ) : (
               <>

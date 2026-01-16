@@ -182,6 +182,15 @@ export async function createPaymentIntent(req, res) {
       metadata.orderSummary = compactItems;
     }
 
+     // Add shipping address (also subject to 500 char limit)
+    const shippingJSON = JSON.stringify(shippingAddress);
+    if (shippingJSON.length <= 500) {
+      metadata.shippingAddress = shippingJSON;
+    } else {
+      // Consider storing address ID or truncating if too long
+      console.warn("[payment] shippingAddress exceeds metadata limit");
+    }
+
     // Log metadata sizes (debugging only)
     console.log("[payment] metadata sizes", {
       fullItemsJSON: fullItemsJSON.length,
@@ -226,7 +235,7 @@ export async function handleWebhook(req, res) {
     console.log("Payment succeeded:", paymentIntent.id);
 
     try {
-      const { userId, clerkId, orderItems, shippingAddress, totalPrice } = paymentIntent.metadata;
+      const { userId, clerkId, orderItems, orderSummary, shippingAddress, totalPrice } = paymentIntent.metadata;
 
       // Check if order already exists (prevent duplicates)
       const existingOrder = await Order.findOne({ "paymentResult.id": paymentIntent.id });
@@ -235,11 +244,46 @@ export async function handleWebhook(req, res) {
         return res.json({ received: true });
       }
 
+      // Parse order items from full JSON or reconstruct from compact summary
+      let parsedItems;
+      if (orderItems) {
+        parsedItems = JSON.parse(orderItems);
+      } else if (orderSummary) {
+        // Compact format: "productId:qty,productId:qty"
+        parsedItems = await Promise.all(
+          orderSummary.split(",").map(async (entry) => {
+            const [productId, quantity] = entry.split(":");
+            const product = await Product.findById(productId);
+            return {
+              productId,
+              quantity: parseInt(quantity, 10),
+              price: product?.price || 0,
+            };
+          })
+        );
+      } else {
+        throw new Error("No order items in metadata");
+      }
+
       // create order
+      // FORMERL CODE FOR ORDER CREATION
+      // const order = await Order.create({
+      //   user: userId,
+      //   clerkId,
+      //   orderItems: JSON.parse(orderItems),
+      //   shippingAddress: JSON.parse(shippingAddress),
+      //   paymentResult: {
+      //     id: paymentIntent.id,
+      //     status: "succeeded",
+      //   },
+      //   totalPrice: parseFloat(totalPrice),
+      // });
+
+      // NEW CODE FOR ORDER CREATION WITH PARSED ITEMS
       const order = await Order.create({
         user: userId,
         clerkId,
-        orderItems: JSON.parse(orderItems),
+        orderItems: parsedItems,
         shippingAddress: JSON.parse(shippingAddress),
         paymentResult: {
           id: paymentIntent.id,
@@ -248,10 +292,18 @@ export async function handleWebhook(req, res) {
         totalPrice: parseFloat(totalPrice),
       });
 
+      // FORMER CODE TO UPDATE PRODUCT STOCK. WE ARE CHANGING ACCORDNG TO CODERABBIT THE WEBHOOK HANDLER DOESNT SUPPORT COMPACT ORDER SUMMARY 
       // update product stock
-      const items = JSON.parse(orderItems);
-      for (const item of items) {
-        await Product.findByIdAndUpdate(item.product, {
+      // const items = JSON.parse(orderItems);
+      // for (const item of items) {
+      //   await Product.findByIdAndUpdate(item.product, {
+      //     $inc: { stock: -item.quantity },
+      //   });
+      // }
+
+      // NEW CODE TO UPDATE PRODUCT STOCK BASED ON PARSED ITEMS
+      for (const item of parsedItems) {
+        await Product.findByIdAndUpdate(item.productId, {
           $inc: { stock: -item.quantity },
         });
       }
