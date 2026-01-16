@@ -113,7 +113,13 @@ export async function createPaymentIntent(req, res) {
       if (!Number.isInteger(item.quantity) || item.quantity <= 0) {
         return res.status(400).json({ error: "Invalid item quantity" });
       }
-      const product = await Product.findById(item.product._id);
+      // item.product._id will throw if the client sends product as an ID string or omits it. That yields a 500 instead of a 400. Normalize the product ID before the lookup.
+      const productId = item?.product?._id ?? item?.product;
+      if (!productId) {
+        return res.status(400).json({ error: "Invalid product reference" });
+      }
+      const product = await Product.findById(productId);
+
       if (!product) {
         return res
           .status(404)
@@ -171,7 +177,7 @@ export async function createPaymentIntent(req, res) {
 
     // Compact summary: productId:qty,productId:qty
     const compactItems = validatedItems
-      .map((i) => `${i.productId}:${i.quantity}`)
+      .map((i) => `${i.productId}:${i.quantity}:${i.price}`)
       .join(",");
 
     const metadata = {
@@ -186,6 +192,13 @@ export async function createPaymentIntent(req, res) {
     } else {
       metadata.orderSummary = compactItems;
     }
+
+    // Validate compactItems fits within Stripe's 500-char metadata limit
+   if (metadata.orderSummary && metadata.orderSummary.length > 500) {
+     return res.status(400).json({
+       error: "Cart too large to encode in payment metadata",
+     });
+   }
 
     // Add shipping address (also subject to 500 char limit)
     if (shippingAddress) {
@@ -257,8 +270,14 @@ export async function handleWebhook(req, res) {
       } = paymentIntent.metadata;
 
       if (!shippingAddress) {
-        throw new Error("Missing shippingAddress in metadata");
+        return res.status(400).json({ error: "Shipping address is required" });
       }
+
+      const shippingJSON = JSON.stringify(shippingAddress);
+      if (shippingJSON.length > 500) {
+        return res.status(400).json({ error: "Shipping address is too long" });
+      }
+      metadata.shippingAddress = shippingJSON;
       // Check if order already exists (prevent duplicates)
       const existingOrder = await Order.findOne({
         "paymentResult.id": paymentIntent.id,
@@ -276,12 +295,12 @@ export async function handleWebhook(req, res) {
         // Compact format: "productId:qty,productId:qty"
         parsedItems = await Promise.all(
           orderSummary.split(",").map(async (entry) => {
-            const [productId, quantity] = entry.split(":");
-            const product = await Product.findById(productId);
+            const [productId, quantity, price] = entry.split(":");
+            const product = price ? null : await Product.findById(productId);
             return {
               productId,
               quantity: parseInt(quantity, 10),
-              price: product?.price || 0,
+              price: price ? parseFloat(price) : product?.price || 0,
             };
           })
         );

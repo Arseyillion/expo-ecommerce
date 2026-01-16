@@ -137,7 +137,7 @@ const CartScreen = () => {
 
       const { error: initError } = await initPaymentSheet({
         paymentIntentClientSecret: data.clientSecret,
-        merchantDisplayName: process.env.PUBLIC_MERCHANT_DISPLAY_NAME || "My Store",
+        merchantDisplayName: process.env.EXPO_PUBLIC_MERCHANT_DISPLAY_NAME || "My Store",
       });
 
       if (initError) {
