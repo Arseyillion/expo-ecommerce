@@ -14,6 +14,7 @@ import reviewRoutes from "./routes/review.route.js";
 import productRoutes from "./routes/product.route.js";
 import cartRoutes from "./routes/cart.route.js";
 import paymentRoutes from "./routes/payment.route.js";
+import { handleWebhook } from "./controllers/payment.controller.js";
 
 import cors from "cors";  
 
@@ -23,25 +24,21 @@ const app = express();
 // Get the full path of the current file
 const __dirname = path.resolve();
 
-
-// special handling: Stripe webhook needs raw body BEFORE any body parsing middleware
-// apply raw body parser conditionally only to webhook endpoint
-app.use(
-  "/api/payment",
-  (req, res, next) => {
-    if (req.originalUrl === "/api/payment/webhook") {
-      express.raw({ type: "application/json" })(req, res, next);
-    } else {
-      express.json()(req, res, next); // parse json for non-webhook routes
-    }
-  },
-  paymentRoutes
+// CRITICAL: Raw body parser for Stripe webhook MUST come before JSON parser
+app.post(
+  "/api/payment/webhook",
+  express.raw({ type: "application/json" }),
+  handleWebhook
 );
 
 //makes it possible to handle json data in the request body
 app.use(express.json());
+
 app.use(clerkMiddleware()); // adds auth object to request
 app.use(cors({ origin: ENV.CLIENT_URL, credentials: true })); // credentials: true allows the browser to send the cookies to the server with the request
+
+// Mount payment routes for other endpoints
+app.use("/api/payment", paymentRoutes);
 
 
 // we got this from inngest documentation so there's no need to try to know it by heart

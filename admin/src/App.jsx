@@ -26,6 +26,9 @@ function App() {
         <Route path="orders" element={<OrdersPage />} />
         <Route path="customers" element={<CustomersPage />} />
       </Route>
+
+      {/* Catch-all route for 404s - redirect to dashboard or login */}
+      <Route path="*" element={isSignedIn ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
     </Routes>
   );
 }
