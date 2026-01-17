@@ -123,6 +123,7 @@ const CartScreen = () => {
       setPaymentLoading(true);
 
       // create payment intent with cart items and shipping address
+      console.log("Creating payment intent with address:", selectedAddress);
       const { data } = await api.post("/payment/create-intent", {
         cartItems,
         shippingAddress: {

@@ -23,6 +23,7 @@ export const useAddresses = () => {
     enabled: !!userId,
     queryFn: async () => {
       const { data } = await api.get<{ addresses: Address[] }>("/users/addresses");
+      console.log("Fetched addresses:", data.addresses);
       return data.addresses;
     },
   });
