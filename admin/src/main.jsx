@@ -43,7 +43,7 @@ if(!PUBLISHABLE_KEY){
 const queryClient = new QueryClient()
 
 // Wrap BrowserRouter with Sentry
-const SentryBrowserRouter = Sentry.withSentryRouting(BrowserRouter);
+const SentryBrowserRouter = Sentry.withSentryReactRouterV7Routing(BrowserRouter);
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
