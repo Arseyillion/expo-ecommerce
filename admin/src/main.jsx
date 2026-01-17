@@ -15,16 +15,17 @@ import * as Sentry from "@sentry/react";
 if (!import.meta.env.VITE_SENTRY_DSN) {
   console.warn('VITE_SENTRY_DSN not configured, Sentry will not be initialized');
 } else {
-  Sentry.init({
-    dsn: import.meta.env.VITE_SENTRY_DSN,
-    sendDefaultPii: true,
-    enableLogs: true,
-    integrations: [
-      Sentry.replayIntegration(),
-    ],
-    replaysSessionSampleRate: import.meta.env.DEV ? 1.0 : 0.1,
-    replaysOnErrorSampleRate: 1.0,
-  });
+ Sentry.init({
+  dsn: import.meta.env.VITE_SENTRY_DSN,
+  tracesSampleRate: import.meta.env.DEV ? 1.0 : 0.1,  // Add this
+  sendDefaultPii: true,
+  enableLogs: true,
+  integrations: [
+    Sentry.replayIntegration(),
+  ],
+  replaysSessionSampleRate: import.meta.env.DEV ? 1.0 : 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
 }
 
 // import your publishable key
@@ -55,7 +56,7 @@ createRoot(document.getElementById('root')).render(
   </StrictMode>
 )
 
-
+// FORMER CODE 
 // import { StrictMode, useEffect } from 'react'
 // import { createRoot } from 'react-dom/client'
 // import './index.css'
