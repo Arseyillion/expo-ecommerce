@@ -240,117 +240,122 @@ export async function createPaymentIntent(req, res) {
 }
 
 export async function handleWebhook(req, res) {
+  console.log("🔔 Stripe webhook hit");
+
   const sig = req.headers["stripe-signature"];
+  if (!sig) {
+    console.error("❌ Missing Stripe signature header");
+    return res.status(400).send("Missing Stripe signature");
+  }
+
   let event;
 
   try {
-    event = stripe.webhooks.constructEventAsync(
+    event = await stripe.webhooks.constructEventAsync(
       req.body,
       sig,
       ENV.STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
-    console.error("Webhook signature verification failed:", err.message);
+    console.error("❌ Webhook signature verification failed");
+    console.error(err);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  if (event.type === "payment_intent.succeeded") {
-    const paymentIntent = event.data.object;
+  console.log("✅ Event verified");
+  console.log("➡️ Event type:", event.type);
 
-    console.log("Payment succeeded:", paymentIntent.id);
+  if (event.type !== "payment_intent.succeeded") {
+    console.log("ℹ️ Ignoring event:", event.type);
+    return res.json({ received: true });
+  }
 
-    try {
-      const {
-        userId,
-        clerkId,
-        orderItems,
-        orderSummary,
-        shippingAddress,
-        totalPrice,
-      } = paymentIntent.metadata;
+  const paymentIntent = event.data.object;
 
-      if (!shippingAddress) {
-        return res.status(400).json({ error: "Shipping address is required" });
-      }
+  console.log("💰 PaymentIntent ID:", paymentIntent.id);
+  console.log("📦 Metadata:", paymentIntent.metadata);
 
-      const existingOrder = await Order.findOne({
-        "paymentResult.id": paymentIntent.id,
-      });
-      if (existingOrder) {
-        console.log("Order already exists for payment:", paymentIntent.id);
-        return res.json({ received: true });
-      }
+  try {
+    const {
+      userId,
+      clerkId,
+      orderItems,
+      orderSummary,
+      shippingAddress,
+      totalPrice,
+    } = paymentIntent.metadata;
 
-      // Parse order items from full JSON or reconstruct from compact summary
-      let parsedItems;
-      if (orderItems) {
-        parsedItems = JSON.parse(orderItems);
-      } else if (orderSummary) {
-        // Compact format: "productId:qty,productId:qty"
-        parsedItems = await Promise.all(
-          orderSummary.split(",").map(async (entry) => {
-            const [productId, quantity, price] = entry.split(":");
-            const product = price ? null : await Product.findById(productId);
-            return {
-              productId,
-              quantity: parseInt(quantity, 10),
-              price: price ? parseFloat(price) : product?.price || 0,
-            };
-          })
-        );
-      } else {
-        throw new Error("No order items in metadata");
-      }
-
-      // create order
-      // FORMERL CODE FOR ORDER CREATION
-      // const order = await Order.create({
-      //   user: userId,
-      //   clerkId,
-      //   orderItems: JSON.parse(orderItems),
-      //   shippingAddress: JSON.parse(shippingAddress),
-      //   paymentResult: {
-      //     id: paymentIntent.id,
-      //     status: "succeeded",
-      //   },
-      //   totalPrice: parseFloat(totalPrice),
-      // });
-
-      // NEW CODE FOR ORDER CREATION WITH PARSED ITEMS
-      const order = await Order.create({
-        user: userId,
-        clerkId,
-        orderItems: parsedItems,
-        shippingAddress: JSON.parse(shippingAddress),
-        paymentResult: {
-          id: paymentIntent.id,
-          status: "succeeded",
-        },
-        totalPrice: parseFloat(totalPrice),
-      });
-
-      // FORMER CODE TO UPDATE PRODUCT STOCK. WE ARE CHANGING ACCORDNG TO CODERABBIT THE WEBHOOK HANDLER DOESNT SUPPORT COMPACT ORDER SUMMARY
-      // update product stock
-      // const items = JSON.parse(orderItems);
-      // for (const item of items) {
-      //   await Product.findByIdAndUpdate(item.product, {
-      //     $inc: { stock: -item.quantity },
-      //   });
-      // }
-
-      // NEW CODE TO UPDATE PRODUCT STOCK BASED ON PARSED ITEMS
-      for (const item of parsedItems) {
-        await Product.findByIdAndUpdate(item.productId, {
-          $inc: { stock: -item.quantity },
-        });
-      }
-
-      console.log("Order created successfully:", order._id);
-    } catch (error) {
-      console.error("Error creating order from webhook:", error);
-      return res.status(500).json({ received: false });
+    if (!userId || !clerkId) {
+      throw new Error("Missing userId or clerkId in metadata");
     }
+
+    if (!shippingAddress) {
+      throw new Error("Missing shippingAddress in metadata");
+    }
+
+    const existingOrder = await Order.findOne({
+      "paymentResult.id": paymentIntent.id,
+    });
+
+    if (existingOrder) {
+      console.log("⚠️ Order already exists:", existingOrder._id);
+      return res.json({ received: true });
+    }
+
+    let parsedItems;
+
+    if (orderItems) {
+      parsedItems = JSON.parse(orderItems);
+    } else if (orderSummary) {
+      parsedItems = await Promise.all(
+        orderSummary.split(",").map(async (entry) => {
+          const [productId, quantity, price] = entry.split(":");
+          const product = price ? null : await Product.findById(productId);
+
+          if (!product && !price) {
+            throw new Error(`Product not found: ${productId}`);
+          }
+
+          return {
+            productId,
+            quantity: Number(quantity),
+            price: price ? Number(price) : product.price,
+          };
+        })
+      );
+    } else {
+      throw new Error("No order items provided");
+    }
+
+    console.log("🧾 Parsed items:", parsedItems);
+
+    const order = await Order.create({
+      user: userId,
+      clerkId,
+      orderItems: parsedItems,
+      shippingAddress: JSON.parse(shippingAddress),
+      paymentResult: {
+        id: paymentIntent.id,
+        status: "succeeded",
+      },
+      totalPrice: Number(totalPrice),
+    });
+
+    console.log("✅ Order created:", order._id);
+
+    for (const item of parsedItems) {
+      await Product.findByIdAndUpdate(item.productId, {
+        $inc: { stock: -item.quantity },
+      });
+    }
+
+    console.log("📉 Stock updated");
+  } catch (error) {
+    console.error("🔥 Fatal webhook processing error");
+    console.error(error);
+    return res.status(500).json({ received: false });
   }
 
   res.json({ received: true });
 }
+
