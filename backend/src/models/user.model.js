@@ -17,6 +17,10 @@ const addressSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  state: {
+    type: String,
+    required: true,
+  },
   zipCode: {
     type: String,
     required: true,
@@ -30,8 +34,6 @@ const addressSchema = new mongoose.Schema({
     default: false,
   },
 });
-
-
 
 const userSchema = new mongoose.Schema(
   {
@@ -53,8 +55,11 @@ const userSchema = new mongoose.Schema(
       unique: true,
       required: true,
     },
+    stripeCustomerId: {
+      type: String,
+      default: "",
+    },
     addresses: [addressSchema],
-    // the wish list is going to be an array of productID'S
     wishlist: [
       {
         type: mongoose.Schema.Types.ObjectId,
