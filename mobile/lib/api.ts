@@ -21,7 +21,7 @@ const API_URL = "https://expo-ecommerce-1v13.onrender.com/api"
 // FORMERLLY getBaseUrl()
 
 const api = axios.create({
-  baseURL: getBaseUrl(),
+  baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
   },

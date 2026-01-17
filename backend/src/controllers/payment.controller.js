@@ -194,15 +194,17 @@ export async function createPaymentIntent(req, res) {
     }
 
     // Validate compactItems fits within Stripe's 500-char metadata limit
-   if (metadata.orderSummary && metadata.orderSummary.length > 500) {
-     return res.status(400).json({
-       error: "Cart too large to encode in payment metadata",
-     });
-   }
+    if (metadata.orderSummary && metadata.orderSummary.length > 500) {
+      return res.status(400).json({
+        error: "Cart too large to encode in payment metadata",
+      });
+    }
 
     // Add shipping address (also subject to 500 char limit)
     if (shippingAddress) {
+      console.log("✅✅✅ this is the shipping address in metadata",shippingAddress);
       const shippingJSON = JSON.stringify(shippingAddress);
+      console.log("✅✅✅ this is the shipping address in metadata",shippingJSON);
       if (shippingJSON.length <= 500) {
         metadata.shippingAddress = shippingJSON;
       } else {
@@ -254,7 +256,7 @@ export async function handleWebhook(req, res) {
     event = await stripe.webhooks.constructEventAsync(
       req.body,
       sig,
-      ENV.STRIPE_WEBHOOK_SECRET
+      ENV.STRIPE_WEBHOOK_SECRET,
     );
   } catch (err) {
     console.error("❌ Webhook signature verification failed");
@@ -321,7 +323,7 @@ export async function handleWebhook(req, res) {
             quantity: Number(quantity),
             price: price ? Number(price) : product.price,
           };
-        })
+        }),
       );
     } else {
       throw new Error("No order items provided");
@@ -333,7 +335,7 @@ export async function handleWebhook(req, res) {
     const enrichedOrderItems = await Promise.all(
       parsedItems.map(async (item) => {
         const product = await Product.findById(item.productId);
-        
+
         if (!product) {
           throw new Error(`Product not found: ${item.productId}`);
         }
@@ -345,7 +347,7 @@ export async function handleWebhook(req, res) {
           quantity: item.quantity,
           image: product.images?.[0] || "", // Get first image or empty string
         };
-      })
+      }),
     );
 
     console.log("📦 Enriched order items:", enrichedOrderItems);
@@ -386,4 +388,3 @@ export async function handleWebhook(req, res) {
 
   res.json({ received: true });
 }
-
