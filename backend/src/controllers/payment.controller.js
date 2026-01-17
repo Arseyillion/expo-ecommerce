@@ -329,11 +329,38 @@ export async function handleWebhook(req, res) {
 
     console.log("🧾 Parsed items:", parsedItems);
 
+    // Enrich order items with product data (name, image, product ID)
+    const enrichedOrderItems = await Promise.all(
+      parsedItems.map(async (item) => {
+        const product = await Product.findById(item.productId);
+        
+        if (!product) {
+          throw new Error(`Product not found: ${item.productId}`);
+        }
+
+        return {
+          product: product._id, // Use the actual product ObjectId
+          name: product.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: product.images?.[0] || "", // Get first image or empty string
+        };
+      })
+    );
+
+    console.log("📦 Enriched order items:", enrichedOrderItems);
+
+    // Parse and enrich shipping address with state if missing
+    const parsedAddress = JSON.parse(shippingAddress);
+    if (!parsedAddress.state) {
+      parsedAddress.state = ""; // Add empty state if not provided
+    }
+
     const order = await Order.create({
       user: userId,
       clerkId,
-      orderItems: parsedItems,
-      shippingAddress: JSON.parse(shippingAddress),
+      orderItems: enrichedOrderItems,
+      shippingAddress: parsedAddress,
       paymentResult: {
         id: paymentIntent.id,
         status: "succeeded",
@@ -343,8 +370,9 @@ export async function handleWebhook(req, res) {
 
     console.log("✅ Order created:", order._id);
 
-    for (const item of parsedItems) {
-      await Product.findByIdAndUpdate(item.productId, {
+    // Update stock for each product
+    for (const item of enrichedOrderItems) {
+      await Product.findByIdAndUpdate(item.product, {
         $inc: { stock: -item.quantity },
       });
     }
