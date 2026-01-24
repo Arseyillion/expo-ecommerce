@@ -38,6 +38,10 @@ const productSchema = new mongoose.Schema({
         type:Number,
         default:0,
     },
+    isNewArrival: {
+        type: Boolean,
+        default: false,
+    },
 },{timestamps:true})
 
 export const Product = mongoose.model("Product",productSchema);

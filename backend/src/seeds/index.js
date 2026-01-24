@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import { Product } from "../models/product.model.js";
 import { ENV } from "../config/env.js";
+import seedCategories from "./categories.seed.js";
+import seedCarousels from "./carousel.seed.js";
 
 const products = [
   {
@@ -151,19 +153,27 @@ const seedDatabase = async () => {
     await mongoose.connect(ENV.DB_URL);
     console.log("✅ Connected to MongoDB");
 
+    // Seed categories first
+    // await seedCategories();
+    // console.log("");
+
+    // Seed carousels
+    await seedCarousels();
+    console.log("");
+
     // Clear existing products
-    await Product.deleteMany({});
-    console.log("🗑️  Cleared existing products");
+    // await Product.deleteMany({});
+    // console.log("🗑️  Cleared existing products");
 
     // Insert seed products
-    await Product.insertMany(products);
-    console.log(`✅ Successfully seeded ${products.length} products`);
+    // await Product.insertMany(products);
+    // console.log(`✅ Successfully seeded ${products.length} products`);
 
     // Extract unique categories from the seeded products using Set to remove duplicates
-    const categories = [...new Set(products.map((p) => p.category))];
-    console.log("\n📊 Seeded Products Summary:");
-    console.log(`Total Products: ${products.length}`);
-    console.log(`Categories: ${categories.join(", ")}`);
+    // const categories = [...new Set(products.map((p) => p.category))];
+    // console.log("\n📊 Seeded Products Summary:");
+    // console.log(`Total Products: ${products.length}`);
+    // console.log(`Categories: ${categories.join(", ")}`);
 
     // Close the database connection to free up resources since this is a one-time script
     await mongoose.connection.close();
