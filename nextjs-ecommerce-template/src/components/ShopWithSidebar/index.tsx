@@ -93,9 +93,10 @@ const ShopWithSidebar = () => {
     }
 
     return () => {
+      window.removeEventListener("scroll", handleStickyMenu);
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  });
+  }, [productSidebar]);
 
   return (
     <>

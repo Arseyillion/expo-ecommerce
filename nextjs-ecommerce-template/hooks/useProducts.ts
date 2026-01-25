@@ -1,4 +1,3 @@
-import { AxiosInstance } from './../node_modules/axios/index.d';
 import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "../lib/axios";
 import { Product } from "@/types/index";
