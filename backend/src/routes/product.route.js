@@ -1,11 +1,12 @@
 import { Router } from "express";
-import { protectRoute } from "../middleware/auth.middleware.js";
 import { getAllProducts } from "../controllers/admin.controller.js";
-import { getProductById } from "../controllers/product.controller.js";
+import { getProductById, getNewArrivals } from "../controllers/product.controller.js";
 
 const router = Router();
 
-router.get("/", protectRoute, getAllProducts);
-router.get("/:id", protectRoute, getProductById);
+// Public product listing endpoints
+router.get("/", getAllProducts);
+router.get("/new-arrivals", getNewArrivals);
+router.get("/:id", getProductById);
 
 export default router;

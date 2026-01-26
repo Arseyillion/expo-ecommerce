@@ -13,6 +13,7 @@ function ProductsPage() {
     price: "",
     stock: "",
     description: "",
+    isNewArrival: false,
   });
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
@@ -79,6 +80,7 @@ function ProductsPage() {
       price: product.price.toString(),
       stock: product.stock.toString(),
       description: product.description,
+      isNewArrival: Boolean(product.isNewArrival),
     });
     setImagePreviews(product.images);
     setShowModal(true);
@@ -111,6 +113,7 @@ function ProductsPage() {
     formDataToSend.append("price", formData.price);
     formDataToSend.append("stock", formData.stock);
     formDataToSend.append("category", formData.category);
+    formDataToSend.append("isNewArrival", formData.isNewArrival ? "true" : "false");
 
     // only append new images if they were selected
     if (images.length > 0) images.forEach((image) => formDataToSend.append("images", image));
@@ -293,6 +296,18 @@ function ProductsPage() {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 required
               />
+            </div>
+
+            <div className="form-control">
+              <label className="label cursor-pointer">
+                <span className="label-text">Mark as "New Arrival"</span>
+                <input
+                  type="checkbox"
+                  className="checkbox ml-4"
+                  checked={!!formData.isNewArrival}
+                  onChange={(e) => setFormData({ ...formData, isNewArrival: e.target.checked })}
+                />
+              </label>
             </div>
 
             <div className="form-control">
