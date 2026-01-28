@@ -2,7 +2,7 @@ import React from "react";
 import Hero from "./Hero";
 import Categories from "./Categories";
 import NewArrival from "./NewArrivals";
-import PromoBanner from "./PromoBanner";
+import DynamicPromoBanner from "./PromoBanner/DynamicPromoBanner";
 import BestSeller from "./BestSeller";
 import CounDown from "./Countdown";
 import Testimonials from "./Testimonials";
@@ -14,7 +14,7 @@ const Home = () => {
       <Hero />
       <Categories />
       <NewArrival />
-      <PromoBanner />
+      <DynamicPromoBanner />
       <BestSeller />
       <CounDown />
       <Testimonials />

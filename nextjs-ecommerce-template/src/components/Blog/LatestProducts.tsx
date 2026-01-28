@@ -1,6 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import PriceDisplay from "../Common/PriceDisplay";
 
 const LatestProducts = ({ products }) => {
   return (
@@ -22,7 +23,14 @@ const LatestProducts = ({ products }) => {
                 <h3 className="font-medium text-dark mb-1 ease-out duration-200 hover:text-blue">
                   <Link href="/shop-details"> {product.title} </Link>
                 </h3>
-                <p className="text-custom-sm">Price: ${product.price}</p>
+                <PriceDisplay
+                  price={product.price}
+                  discountedPrice={product.discountedPrice}
+                  hasDiscount={product.hasDiscount}
+                  discount={product.discount}
+                  size="sm"
+                  className="text-custom-sm"
+                />
               </div>
             </div>
           ))}

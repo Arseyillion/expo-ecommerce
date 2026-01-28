@@ -10,4 +10,8 @@ export interface Product {
   totalReviews: number;
   createdAt: string;
   updatedAt: string;
+  discount?: number;
+  discountedPrice?: number;
+  hasDiscount?: boolean;
+  isNewArrival?: boolean;
 }

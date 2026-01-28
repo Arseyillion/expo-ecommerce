@@ -69,7 +69,9 @@ const NewArrivalsList = () => {
     title: p.name,
     reviews: p.totalReviews || 0,
     price: p.price || 0,
-    discountedPrice: p.price || 0,
+    discountedPrice: p.discountedPrice || p.price || 0,
+    discount: p.discount || 0,
+    hasDiscount: p.hasDiscount || false,
     imgs: {
       previews: p.images && p.images.length ? p.images : ["/images/products/product-1-bg-1.png"],
       thumbnails: p.images && p.images.length ? p.images.slice(0, 2) : ["/images/products/product-1-sm-1.png"],

@@ -5,6 +5,8 @@ const shopData: Product[] = [
     reviews: 15,
     price: 59.0,
     discountedPrice: 29.0,
+    discount: 51,
+    hasDiscount: true,
     id: 1,
     imgs: {
       thumbnails: [
@@ -22,6 +24,8 @@ const shopData: Product[] = [
     reviews: 5,
     price: 899.0,
     discountedPrice: 99.0,
+    discount: 89,
+    hasDiscount: true,
     id: 2,
     imgs: {
       thumbnails: [
@@ -39,6 +43,8 @@ const shopData: Product[] = [
     reviews: 5,
     price: 59.0,
     discountedPrice: 29.0,
+    discount: 51,
+    hasDiscount: true,
     id: 3,
     imgs: {
       thumbnails: [
@@ -56,6 +62,8 @@ const shopData: Product[] = [
     reviews: 6,
     price: 59.0,
     discountedPrice: 29.0,
+    discount: 51,
+    hasDiscount: true,
     id: 4,
     imgs: {
       thumbnails: [
@@ -73,6 +81,8 @@ const shopData: Product[] = [
     reviews: 3,
     price: 99.0,
     discountedPrice: 29.0,
+    discount: 71,
+    hasDiscount: true,
     id: 5,
     imgs: {
       thumbnails: [
@@ -90,6 +100,8 @@ const shopData: Product[] = [
     reviews: 15,
     price: 59.0,
     discountedPrice: 29.0,
+    discount: 51,
+    hasDiscount: true,
     id: 6,
     imgs: {
       thumbnails: [
@@ -107,6 +119,8 @@ const shopData: Product[] = [
     reviews: 15,
     price: 59.0,
     discountedPrice: 29.0,
+    discount: 51,
+    hasDiscount: true,
     id: 7,
     imgs: {
       thumbnails: [
@@ -124,6 +138,8 @@ const shopData: Product[] = [
     reviews: 15,
     price: 59.0,
     discountedPrice: 29.0,
+    discount: 51,
+    hasDiscount: true,
     id: 8,
     imgs: {
       thumbnails: [

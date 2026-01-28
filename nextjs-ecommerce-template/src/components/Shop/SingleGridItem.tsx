@@ -9,6 +9,7 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import Link from "next/link";
 import Image from "next/image";
+import PriceDisplay from "../Common/PriceDisplay";
 
 const SingleGridItem = ({ item }: { item: Product }) => {
   const { openModal } = useModalContext();
@@ -109,52 +110,58 @@ const SingleGridItem = ({ item }: { item: Product }) => {
           </button>
         </div>
       </div>
+      <div className="flex flex-col items-center justify-center">   
+        <div className="flex items-center gap-2.5 mb-2 ">
+          {/* review stars */}
+          <div className="flex items-center gap-1">
+            <Image
+              src="/images/icons/icon-star.svg"
+              alt="star icon"
+              width={15}
+              height={15}
+            />
+            <Image
+              src="/images/icons/icon-star.svg"
+              alt="star icon"
+              width={15}
+              height={15}
+            />
+            <Image
+              src="/images/icons/icon-star.svg"
+              alt="star icon"
+              width={15}
+              height={15}
+            />
+            <Image
+              src="/images/icons/icon-star.svg"
+              alt="star icon"
+              width={15}
+              height={15}
+            />
+            <Image
+              src="/images/icons/icon-star.svg"
+              alt="star icon"
+              width={15}
+              height={15}
+            />
+          </div>
 
-      <div className="flex items-center gap-2.5 mb-2">
-        <div className="flex items-center gap-1">
-          <Image
-            src="/images/icons/icon-star.svg"
-            alt="star icon"
-            width={15}
-            height={15}
-          />
-          <Image
-            src="/images/icons/icon-star.svg"
-            alt="star icon"
-            width={15}
-            height={15}
-          />
-          <Image
-            src="/images/icons/icon-star.svg"
-            alt="star icon"
-            width={15}
-            height={15}
-          />
-          <Image
-            src="/images/icons/icon-star.svg"
-            alt="star icon"
-            width={15}
-            height={15}
-          />
-          <Image
-            src="/images/icons/icon-star.svg"
-            alt="star icon"
-            width={15}
-            height={15}
-          />
+          <p className="text-custom-sm">({item.reviews})</p>
         </div>
 
-        <p className="text-custom-sm">({item.reviews})</p>
-      </div>
+        <h3 className="font-medium text-dark ease-out duration-200 hover:text-blue mb-1.5">
+          <Link href="/shop-details"> {item.title} </Link>
+        </h3>
 
-      <h3 className="font-medium text-dark ease-out duration-200 hover:text-blue mb-1.5">
-        <Link href="/shop-details"> {item.title} </Link>
-      </h3>
+        <PriceDisplay
+          price={item.price}
+          discountedPrice={item.discountedPrice}
+          hasDiscount={item.hasDiscount}
+          discount={item.discount}
+          className="flex items-center gap-2 font-medium text-lg"
+        />
 
-      <span className="flex items-center gap-2 font-medium text-lg">
-        <span className="text-dark">${item.discountedPrice}</span>
-        <span className="text-dark-4 line-through">${item.price}</span>
-      </span>
+      </div>   
     </div>
   );
 };

@@ -9,6 +9,7 @@ import OrdersPage from "./pages/OrdersPage";
 import CustomersPage from "./pages/CustomersPage";
 import DashboardLayout from "./layouts/DashboardLayout";
 import SalesPage from "./pages/SalesPage";
+import PromoBannersPage from "./pages/PromoBannersPage";
 
 import PageLoader from "./components/PageLoader";
 
@@ -28,6 +29,7 @@ function App() {
         <Route path="products" element={<ProductsPage />} />
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="carousels" element={<CarouselsPage />} />
+        <Route path="promo-banners" element={<PromoBannersPage />} />
         <Route path="orders" element={<OrdersPage />} />
         <Route path="customers" element={<CustomersPage />} />
         <Route path="salespage" element={<SalesPage />} />

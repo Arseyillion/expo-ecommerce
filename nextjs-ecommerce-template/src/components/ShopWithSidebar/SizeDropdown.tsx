@@ -13,7 +13,6 @@ const SizeDropdown = () => {
       >
         <p className="text-dark">Size</p>
         <button
-          onClick={() => setToggleDropdown(!toggleDropdown)}
           aria-label="button for size dropdown"
           className={`text-dark ease-out duration-200 ${
             toggleDropdown && "rotate-180"

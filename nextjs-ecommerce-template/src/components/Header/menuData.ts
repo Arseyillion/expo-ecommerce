@@ -80,6 +80,12 @@ export const menuData: Menu[] = [
         path: "/contact",
       },
       {
+        id: 71,
+        title: "Admin",
+        newTab: false,
+        path: "/admin/promo-banners",
+      },
+      {
         id: 62,
         title: "Error",
         newTab: false,

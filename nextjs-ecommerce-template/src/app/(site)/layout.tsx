@@ -4,6 +4,7 @@ import "../css/euclid-circular-a-font.css";
 import "../css/style.css";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import ClerkErrorFallback from "../../components/Auth/ClerkErrorFallback";
 
 import { ModalProvider } from "../context/QuickViewModalContext";
 import { CartModalProvider } from "../context/CartSidebarModalContext";
@@ -16,6 +17,7 @@ import PreviewSliderModal from "@/components/Common/PreviewSlider";
 import ScrollToTop from "@/components/Common/ScrollToTop";
 import PreLoader from "@/components/Common/PreLoader";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ClerkProvider } from "@clerk/nextjs";
 
 export default function RootLayout({
   children,
@@ -37,15 +39,16 @@ export default function RootLayout({
           <PreLoader />
         ) : (
           <>
-            <QueryClientProvider client={queryClient}>
-            <ReduxProvider>
-              <CartModalProvider>
-                <ModalProvider>
-                  <PreviewSliderProvider>
-                    <Header />
-                    {children}
+          <ClerkProvider>
+              <QueryClientProvider client={queryClient}>
+              <ReduxProvider>
+                <CartModalProvider>
+                  <ModalProvider>
+                    <PreviewSliderProvider>
+                      <Header />
+                      {children}
 
-                    <QuickViewModal />
+                      <QuickViewModal />
                     <CartSidebarModal />
                     <PreviewSliderModal />
                   </PreviewSliderProvider>
@@ -55,6 +58,7 @@ export default function RootLayout({
             <ScrollToTop />
             <Footer />
             </QueryClientProvider>
+          </ClerkProvider>
           </>
         )}
       </body>

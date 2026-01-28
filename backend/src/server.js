@@ -15,6 +15,7 @@ import productRoutes from "./routes/product.route.js";
 import categoryRoutes from "./routes/category.route.js";
 import carouselRoutes from "./routes/carousel.route.js";
 import cartRoutes from "./routes/cart.route.js";
+import promoBannerRoutes from "./routes/promoBanner.routes.js";
 import paymentRoutes from "./routes/payment.route.js";
 import { handleWebhook } from "./controllers/payment.controller.js";
 
@@ -35,6 +36,14 @@ app.post(
 
 //makes it possible to handle json data in the request body
 app.use(express.json());
+
+//makes it possible to handle form data (urlencoded) from admin panel
+app.use(express.urlencoded({ extended: true }));
+
+// Serve static files from Next.js public folder in development
+if (ENV.NODE_ENV !== "production") {
+  app.use("/images", express.static(path.join(__dirname, "../../nextjs-ecommerce-template/public/images")));
+}
 
 app.use(clerkMiddleware()); // adds auth object to request
 app.use(cors({ 
@@ -62,6 +71,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/carousels", carouselRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/promo-banners", promoBannerRoutes);
 
 
 

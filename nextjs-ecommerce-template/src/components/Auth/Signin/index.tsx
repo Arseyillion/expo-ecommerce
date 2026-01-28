@@ -1,6 +1,6 @@
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import Link from "next/link";
-import React from "react";
+import { SignIn } from "@clerk/nextjs";
 
 const Signin = () => {
   return (
@@ -13,12 +13,13 @@ const Signin = () => {
               <h2 className="font-semibold text-xl sm:text-2xl xl:text-heading-5 text-dark mb-1.5">
                 Sign In to Your Account
               </h2>
-              <p>Enter your detail below</p>
+              {/* <p>Enter your detail below</p> */}
             </div>
 
             <div>
-              <form>
-                <div className="mb-5">
+              <form className="flex items-center justify-center flex-col">
+                  <SignIn/>
+                {/* <div className="mb-5">
                   <label htmlFor="email" className="block mb-2.5">
                     Email
                   </label>
@@ -64,9 +65,9 @@ const Signin = () => {
                 <span className="relative z-1 block font-medium text-center mt-4.5">
                   <span className="block absolute -z-1 left-0 top-1/2 h-px w-full bg-gray-3"></span>
                   <span className="inline-block px-3 bg-white">Or</span>
-                </span>
+                </span> */}
 
-                <div className="flex flex-col gap-4.5 mt-4.5">
+                {/* <div className="flex flex-col gap-4.5 mt-4.5">
                   <button className="flex justify-center items-center gap-3.5 rounded-lg border border-gray-3 bg-gray-1 p-3 ease-out duration-200 hover:bg-gray-2">
                     <svg
                       width="20"
@@ -114,6 +115,7 @@ const Signin = () => {
                     Sign In with Google
                   </button>
 
+                
                   <button className="flex justify-center items-center gap-3.5 rounded-lg border border-gray-3 bg-gray-1 p-3 ease-out duration-200 hover:bg-gray-2">
                     <svg
                       width="22"
@@ -129,17 +131,17 @@ const Signin = () => {
                     </svg>
                     Sign Up with Github
                   </button>
-                </div>
+                </div> */}
 
-                <p className="text-center mt-6">
+                {/* <p className="text-center mt-6">
                   Don&apos;t have an account?
                   <Link
                     href="/signup"
                     className="text-dark ease-out duration-200 hover:text-blue pl-2"
                   >
                     Sign Up Now!
-                  </Link>
-                </p>
+                  </Link> */}
+                {/* </p> */}
               </form>
             </div>
           </div>

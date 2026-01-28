@@ -14,6 +14,7 @@ function ProductsPage() {
     stock: "",
     description: "",
     isNewArrival: false,
+    discount: "",
   });
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
@@ -28,6 +29,24 @@ function ProductsPage() {
 
   const products = data?.products || [];
 
+  // Group products by category and sort alphabetically within each category
+  const groupedProducts = products.reduce((acc, product) => {
+    const category = product.category || 'Uncategorized';
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(product);
+    return acc;
+  }, {});
+
+  // Sort products alphabetically within each category
+  Object.keys(groupedProducts).forEach(category => {
+    groupedProducts[category].sort((a, b) => a.name.localeCompare(b.name));
+  });
+
+  // Sort categories alphabetically
+  const sortedCategories = Object.keys(groupedProducts).sort();
+
   // creating, update, deleting
   const createProductMutation = useMutation({
     mutationFn: productApi.create,
@@ -39,9 +58,13 @@ function ProductsPage() {
 
   const updateProductMutation = useMutation({
     mutationFn: productApi.update,
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("✅ Product update successful:", data);
       closeModal();
       queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+    onError: (error) => {
+      console.error("❌ Product update failed:", error);
     },
   });
 
@@ -63,6 +86,8 @@ function ProductsPage() {
       price: "",
       stock: "",
       description: "",
+      isNewArrival: false,
+      discount: "",
     });
     // revoke blob URLs to prevent memory leaks
     imagePreviews.forEach((url) => {
@@ -81,6 +106,7 @@ function ProductsPage() {
       stock: product.stock.toString(),
       description: product.description,
       isNewArrival: Boolean(product.isNewArrival),
+      discount: product.discount ? product.discount.toString() : "",
     });
     setImagePreviews(product.images);
     setShowModal(true);
@@ -101,6 +127,12 @@ function ProductsPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    console.log("🔄 Admin form submission started");
+    console.log("📝 Form data:", formData);
+    console.log("🖼️ Images selected:", images.length);
+    console.log("📝 Image previews:", imagePreviews.length);
+    console.log("✏️ Editing product:", editingProduct ? editingProduct.name : "New product");
 
     // for new products, require images
     if (!editingProduct && imagePreviews.length === 0) {
@@ -114,6 +146,12 @@ function ProductsPage() {
     formDataToSend.append("stock", formData.stock);
     formDataToSend.append("category", formData.category);
     formDataToSend.append("isNewArrival", formData.isNewArrival ? "true" : "false");
+    formDataToSend.append("discount", formData.discount || "0");
+    
+    console.log("📤 FormData contents:");
+    for (let [key, value] of formDataToSend.entries()) {
+      console.log(`  ${key}: ${value}`);
+    }
 
     // only append new images if they were selected
     if (images.length > 0) images.forEach((image) => formDataToSend.append("images", image));
@@ -140,66 +178,99 @@ function ProductsPage() {
       </div>
 
       {/* PRODUCTS GRID */}
-      <div className="grid grid-cols-1 gap-4">
-        {products?.map((product) => {
-          const status = getStockStatusBadge(product.stock);
-
-          return (
-            <div key={product._id} className="card bg-base-100 shadow-xl">
-              <div className="card-body">
-                <div className="flex items-center gap-6">
-                  <div className="avatar">
-                    <div className="w-20 rounded-xl">
-                       <img 
-                        src={product.images?.[0] || "/placeholder.png"} 
-                        alt={product.name} 
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="card-title">{product.name}</h3>
-                        <p className="text-base-content/70 text-sm">{product.category}</p>
-                      </div>
-                      <div className={`badge whitespace-nowrap ${status.class}`}>{status.text}</div>
-                    </div>
-                    <div className="flex items-center gap-6 mt-4">
-                      <div>
-                        <p className="text-xs text-base-content/70">Price</p>
-                        <p className="font-bold text-lg">${product.price}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-base-content/70">Stock</p>
-                        <p className="font-bold text-lg">{product.stock} units</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="card-actions">
-                    <button
-                      className="btn btn-square btn-ghost"
-                      onClick={() => handleEdit(product)}
-                    >
-                      <PencilIcon className="w-5 h-5" />
-                    </button>
-                    <button
-                      className="btn btn-square btn-ghost text-error"
-                      onClick={() => deleteProductMutation.mutate(product._id)}
-                    >
-                      {deleteProductMutation.isPending && deleteProductMutation.variables === product._id ? (
-                        <span className="loading loading-spinner"></span>
-                      ) : (
-                        <Trash2Icon className="w-5 h-5" />
-                      )}
-                    </button>
-                  </div>
+      <div className="space-y-8">
+        {sortedCategories.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-base-content/70">No products found</p>
+          </div>
+        ) : (
+          sortedCategories.map((category) => (
+            <div key={category} className="space-y-4">
+              {/* Category Header */}
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-semibold text-base-content">
+                  {category}
+                </h2>
+                <div className="badge badge-ghost">
+                  {groupedProducts[category].length} products
                 </div>
               </div>
+
+              {/* Products in this category */}
+              <div className="grid grid-cols-1 gap-4">
+                {groupedProducts[category].map((product) => {
+                  const status = getStockStatusBadge(product.stock);
+
+                  return (
+                    <div key={product._id} className="card bg-base-100 shadow-xl">
+                      <div className="card-body">
+                        <div className="flex items-center gap-6">
+                          <div className="avatar">
+                            <div className="w-20 rounded-xl">
+                               <img 
+                                src={product.images?.[0] || "/placeholder.png"} 
+                                alt={product.name} 
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h3 className="card-title">{product.name}</h3>
+                                <p className="text-base-content/70 text-sm">{product.category}</p>
+                              </div>
+                              <div className={`badge whitespace-nowrap ${status.class}`}>{status.text}</div>
+                            </div>
+                            <div className="flex items-center gap-6 mt-4">
+                              <div>
+                                <p className="text-xs text-base-content/70">Price</p>
+                                <div className="flex items-center gap-2">
+                                  {product.discount > 0 ? (
+                                    <>
+                                      <p className="font-bold text-lg text-error">${product.discountedPrice?.toFixed(2)}</p>
+                                      <p className="font-bold text-sm text-base-content/50 line-through">${product.price}</p>
+                                      <div className="badge badge-error badge-sm">-{product.discount}%</div>
+                                    </>
+                                  ) : (
+                                    <p className="font-bold text-lg">${product.price}</p>
+                                  )}
+                                </div>
+                              </div>
+                              <div>
+                                <p className="text-xs text-base-content/70">Stock</p>
+                                <p className="font-bold text-lg">{product.stock} units</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="card-actions">
+                            <button
+                              className="btn btn-square btn-ghost"
+                              onClick={() => handleEdit(product)}
+                            >
+                              <PencilIcon className="w-5 h-5" />
+                            </button>
+                            <button
+                              className="btn btn-square btn-ghost text-error"
+                              onClick={() => deleteProductMutation.mutate(product._id)}
+                            >
+                              {deleteProductMutation.isPending && deleteProductMutation.variables === product._id ? (
+                                <span className="loading loading-spinner"></span>
+                              ) : (
+                                <Trash2Icon className="w-5 h-5" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          );
-        })}
+          ))
+        )}
       </div>
 
       {/* ADD/EDIT PRODUCT MODAL */}
@@ -283,6 +354,23 @@ function ProductsPage() {
                   required
                 />
               </div>
+            </div>
+
+            <div className="form-control">
+              <label className="label">
+                <span>Discount (%)</span>
+                <span className="label-text-alt text-base-content/50">Leave empty or 0 for no discount</span>
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                max="100"
+                placeholder="0"
+                className="input input-bordered"
+                value={formData.discount}
+                onChange={(e) => setFormData({ ...formData, discount: e.target.value })}
+              />
             </div>
 
             <div className="form-control flex flex-col gap-2">

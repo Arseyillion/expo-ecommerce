@@ -2,15 +2,15 @@ import React from "react";
 import Image from "next/image";
 
 const featureData = [
-  {
-    img: "/images/icons/icon-01.svg",
-    title: "Free Shipping",
-    description: "For all orders $200",
-  },
+  // {
+  //   img: "/images/icons/icon-01.svg",
+  //   title: "Free Shipping",
+  //   description: "For all orders $200",
+  // },
   {
     img: "/images/icons/icon-02.svg",
-    title: "1 & 1 Returns",
-    description: "Cancellation after 1 day",
+    title: "7day Return policy",
+    description: "you can return products within 7days",
   },
   {
     img: "/images/icons/icon-03.svg",
