@@ -3,6 +3,8 @@ import { Product } from "../models/product.model.js";
 import { ENV } from "../config/env.js";
 import seedCategories from "./categories.seed.js";
 import seedCarousels from "./carousel.seed.js";
+import { seedPromoBanners } from "./promoBanner.seeds.js";
+import { seedDiscountedProducts } from "./discountedProducts.seeds.js";
 
 const products = [
   {
@@ -158,7 +160,15 @@ const seedDatabase = async () => {
     // console.log("");
 
     // Seed carousels
-    await seedCarousels();
+    // await seedCarousels();
+    // console.log("");
+
+    // Seed promo banners
+    await seedPromoBanners();
+    console.log("");
+
+    // Seed discounted products
+    await seedDiscountedProducts();
     console.log("");
 
     // Clear existing products

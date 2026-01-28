@@ -1,6 +1,6 @@
 "use client";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import "swiper/css/navigation";
 import "swiper/css";
 import Image from "next/image";
@@ -10,20 +10,61 @@ import { useAppSelector } from "@/redux/store";
 
 const PreviewSliderModal = () => {
   const { closePreviewModal, isModalPreviewOpen } = usePreviewSlider();
-
   const data = useAppSelector((state) => state.productDetailsReducer.value);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  const sliderRef = useRef(null);
+  // Get images from data
+  const images = data?.imgs?.previews || (data as any)?.images || [];
 
   const handlePrev = useCallback(() => {
-    if (!sliderRef.current) return;
-    sliderRef.current.swiper.slidePrev();
-  }, []);
+    console.log('Prev button clicked');
+    if (currentImageIndex > 0) {
+      setCurrentImageIndex(currentImageIndex - 1);
+      console.log('Changed to image:', currentImageIndex - 1);
+    }
+  }, [currentImageIndex]);
 
   const handleNext = useCallback(() => {
-    if (!sliderRef.current) return;
-    sliderRef.current.swiper.slideNext();
-  }, []);
+    console.log('Next button clicked');
+    if (currentImageIndex < images.length - 1) {
+      setCurrentImageIndex(currentImageIndex + 1);
+      console.log('Changed to image:', currentImageIndex + 1);
+    }
+  }, [currentImageIndex, images.length]);
+
+  // Add keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!isModalPreviewOpen) return;
+      
+      if (e.key === 'ArrowLeft') {
+        handlePrev();
+      } else if (e.key === 'ArrowRight') {
+        handleNext();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isModalPreviewOpen, handlePrev, handleNext]);
+
+  // Reset current image when modal opens
+  useEffect(() => {
+    if (isModalPreviewOpen) {
+      setCurrentImageIndex(0);
+      setImagesLoaded(true);
+    }
+  }, [isModalPreviewOpen]);
+
+  // Debug logging
+  console.log('PreviewSlider Debug:', {
+    isModalPreviewOpen,
+    imagesCount: images.length,
+    currentImageIndex,
+    images,
+    currentImage: images[currentImageIndex]
+  });
 
   return (
     <div
@@ -54,7 +95,7 @@ const PreviewSliderModal = () => {
 
       <div>
         <button
-          className="rotate-180 absolute left-100 p-5 cursor-pointer z-10 "
+          className="absolute left-4 sm:left-8 p-5 cursor-pointer z-10 bg-black/50 rounded-full hover:bg-black/70 transition-colors"
           onClick={handlePrev}
         >
           <svg
@@ -67,14 +108,14 @@ const PreviewSliderModal = () => {
             <path
               fillRule="evenodd"
               clipRule="evenodd"
-              d="M14.5918 5.92548C14.9091 5.60817 15.4236 5.60817 15.7409 5.92548L22.2409 12.4255C22.5582 12.7428 22.5582 13.2572 22.2409 13.5745L15.7409 20.0745C15.4236 20.3918 14.9091 20.3918 14.5918 20.0745C14.2745 19.7572 14.2745 19.2428 14.5918 18.9255L19.7048 13.8125H4.33301C3.88428 13.8125 3.52051 13.4487 3.52051 13C3.52051 12.5513 3.88428 12.1875 4.33301 12.1875H19.7048L14.5918 7.07452C14.2745 6.75722 14.2745 6.24278 14.5918 5.92548Z"
+              d="M11.4082 20.0745C11.0909 20.3918 10.5764 20.3918 10.2591 20.0745L3.75912 13.5745C3.44181 13.2572 3.44181 12.7428 3.75912 12.4255L10.2591 5.92548C10.5764 5.60817 11.0909 5.60817 11.4082 5.92548C11.7255 6.24278 11.7255 6.75722 11.4082 7.07452L6.29522 12.1875H21.667C22.1157 12.1875 22.4795 12.5513 22.4795 13C22.4795 13.4487 22.1157 13.8125 21.667 13.8125H6.29522L11.4082 18.9255C11.7255 19.2428 11.7255 19.7572 11.4082 20.0745Z"
               fill="#FDFDFD"
             />
           </svg>
         </button>
 
         <button
-          className="absolute right-100 p-5 cursor-pointer z-10"
+          className="absolute right-4 sm:right-8 p-5 cursor-pointer z-10 bg-black/50 rounded-full hover:bg-black/70 transition-colors"
           onClick={handleNext}
         >
           <svg
@@ -94,28 +135,49 @@ const PreviewSliderModal = () => {
         </button>
       </div>
 
-      <Swiper ref={sliderRef} slidesPerView={1} spaceBetween={20}>
-        <SwiperSlide>
-          <div className="flex justify-center items-center">
-            <Image
-              src={"/images/products/product-2-bg-1.png"}
-              alt={"product image"}
-              width={450}
-              height={450}
-            />
+      <div className="relative">
+        {images.length === 0 ? (
+          <div className="flex items-center justify-center h-[450px]">
+            <div className="text-white text-center">
+              <p>No images available</p>
+            </div>
           </div>
-        </SwiperSlide>
-        <SwiperSlide>
-          <div className="flex justify-center items-center">
-            <Image
-              src={"/images/products/product-2-bg-1.png"}
-              alt={"product image"}
-              width={450}
-              height={450}
-            />
+        ) : (
+          <div className="relative">
+            {/* Add slide counter */}
+            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+              {currentImageIndex + 1} / {images.length}
+            </div>
+            
+            {/* Current Image Display */}
+            <div className="flex justify-center items-center">
+              <div className="relative">
+                {/* Add slide number indicator */}
+                <div className="absolute top-2 left-2 bg-black/50 text-white px-2 py-1 rounded text-xs z-10">
+                  Image {currentImageIndex + 1}
+                </div>
+                <Image
+                  src={images[currentImageIndex]}
+                  alt={`product image ${currentImageIndex + 1}`}
+                  width={450}
+                  height={450}
+                  className="object-contain"
+                  priority
+                  onError={(e) => {
+                    console.log('Image failed to load:', images[currentImageIndex]);
+                    // Fallback to placeholder if image fails to load
+                    const target = e.target as HTMLImageElement;
+                    target.src = "/images/products/product-1-bg-1.png";
+                  }}
+                  onLoad={() => {
+                    console.log('Image loaded successfully:', images[currentImageIndex]);
+                  }}
+                />
+              </div>
+            </div>
           </div>
-        </SwiperSlide>
-      </Swiper>
+        )}
+      </div>
     </div>
   );
 };

@@ -10,7 +10,7 @@ export async function createProduct(req, res) {
     // Implementation for creating a product
     try {
         console.log("🔄 Starting product creation process");
-        const { name, description, price, stock, category, isNewArrival } = req.body;
+        const { name, description, price, stock, category, isNewArrival, discount } = req.body;
         console.log("📝 Extracted form data:", { name, description, price, stock, category });
 
         // if not all fields are provided
@@ -66,7 +66,8 @@ export async function createProduct(req, res) {
 
         const parsedPrice = parseFloat(price);
         const parsedStock = parseInt(stock);
-        console.log("🔢 Parsed values:", { parsedPrice, parsedStock });
+        const parsedDiscount = discount ? parseFloat(discount) : 0;
+        console.log("🔢 Parsed values:", { parsedPrice, parsedStock, parsedDiscount });
 
         if(isNaN(parsedPrice) ){
             return res.status(400).json({message:"invalid price value"})
@@ -86,6 +87,7 @@ export async function createProduct(req, res) {
             category,
           images:imageUrls,
           isNewArrival: Boolean(isNewArrival),
+          discount: parsedDiscount,
         });
         console.log("✅ Product created successfully:", product._id);
 
@@ -96,11 +98,33 @@ export async function createProduct(req, res) {
     }
 }
 
-export async function getAllProducts(_, res) {
-    // Implementation for getting all products
+export async function getAllProducts(req, res) {
+    // Implementation for getting all products with pagination
     try {
-        const products = await Product.find().sort({ createdAt: -1 }); // Sort by creation date in descending order, which means latest products first
-        return res.status(200).json({ products });
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 12;
+        const skip = (page - 1) * limit;
+
+        // Get total count of products
+        const totalProducts = await Product.countDocuments();
+        
+        // Get products with pagination
+        const products = await Product.find()
+            .sort({ createdAt: -1 }) // Sort by creation date in descending order
+            .skip(skip)
+            .limit(limit);
+
+        const totalPages = Math.ceil(totalProducts / limit);
+
+        return res.status(200).json({ 
+            products,
+            pagination: {
+                page,
+                limit,
+                total: totalProducts,
+                totalPages
+            }
+        });
     } catch (error) {
         console.error("Error fetching products:", error);
         return res.status(500).json({ message: "Server error, Failed to fetch products", error: error.message });
@@ -110,13 +134,40 @@ export async function getAllProducts(_, res) {
 export async function updateProduct(req, res) { 
     // Implementation for updating a product
     try {
+        console.log("🔄 Starting product update process");
+        console.log("📝 Request params:", req.params);
+        console.log("📝 Request body type:", typeof req.body);
+        console.log("📝 Request body keys:", Object.keys(req.body));
+        console.log("📝 Request body:", req.body);
+        console.log("📝 Request files:", req.files);
+        
         const { id } = req.params;
-        const { name, description, price, stock, category, isNewArrival } = req.body;
+        const { name, description, price, stock, category, isNewArrival, discount } = req.body;
+        
+        console.log("📋 Extracted form data:", { 
+            id, 
+            name, 
+            description, 
+            price, 
+            stock, 
+            category, 
+            isNewArrival, 
+            discount 
+        });
 
         const product = await Product.findById(id);
         if (!product) {
+            console.log("❌ Product not found with ID:", id);
             return res.status(404).json({ message: "Product not found" });
         }
+        
+        console.log("📦 Found product:", {
+            name: product.name,
+            currentPrice: product.price,
+            currentDiscount: product.discount,
+            currentHasDiscount: product.hasDiscount,
+            currentDiscountedPrice: product.discountedPrice
+        });
 
         // Update fields if they are provided in the request body
         if (name) product.name = name;
@@ -125,6 +176,33 @@ export async function updateProduct(req, res) {
         if (stock !== undefined) product.stock = parseInt(stock);
         if (category) product.category = category;
         if (isNewArrival !== undefined) product.isNewArrival = Boolean(isNewArrival);
+        
+        if (discount !== undefined) {
+            console.log("💰 Updating discount field. Original discount:", product.discount, "New discount:", discount);
+            product.discount = parseFloat(discount);
+            // Calculate discounted price and hasDiscount flag
+            if (product.discount > 0) {
+                product.discountedPrice = product.price * (1 - product.discount / 100);
+                product.hasDiscount = true;
+                console.log("✅ Applied discount:", {
+                    discount: product.discount,
+                    originalPrice: product.price,
+                    discountedPrice: product.discountedPrice,
+                    hasDiscount: product.hasDiscount
+                });
+            } else {
+                product.discountedPrice = product.price;
+                product.hasDiscount = false;
+                console.log("❌ Removed discount:", {
+                    discount: product.discount,
+                    originalPrice: product.price,
+                    discountedPrice: product.discountedPrice,
+                    hasDiscount: product.hasDiscount
+                });
+            }
+        } else {
+            console.log("⚠️ Discount field not provided in request");
+        }
 
         // Handle image updates if new images are provided
         if (req.files && req.files.length > 0) {
@@ -147,11 +225,21 @@ export async function updateProduct(req, res) {
             product.images = imageUrls; // Replace old images with new ones
         }
 
+        console.log("💾 Saving product to database...");
         await product.save();
+        console.log("✅ Product saved successfully!");
+
+        console.log("📋 Final product state:", {
+            name: product.name,
+            price: product.price,
+            discount: product.discount,
+            hasDiscount: product.hasDiscount,
+            discountedPrice: product.discountedPrice
+        });
 
         return res.status(200).json({ message: "Product updated successfully", product });
     } catch (error) {
-        console.error("Error updating product:", error);
+        console.error("❌ Error updating product:", error);
         return res.status(500).json({ message: "Server error, Failed to update product", error: error.message });
     }
 }

@@ -10,6 +10,7 @@ import { updateproductDetails } from "@/redux/features/product-details";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import Link from "next/link";
+import PriceDisplay from "./PriceDisplay";
 
 const ProductItem = ({ item }: { item: Product }) => {
   const { openModal } = useModalContext();
@@ -93,10 +94,13 @@ const ProductItem = ({ item }: { item: Product }) => {
             <Link href="/shop-details"> {item.title} </Link>
           </h3>
 
-          <span className="flex items-center justify-center gap-2 font-medium text-lg">
-            <span className="text-dark">${item.discountedPrice}</span>
-            <span className="text-dark-4 line-through">${item.price}</span>
-          </span>
+          <PriceDisplay
+            price={item.price}
+            discountedPrice={item.discountedPrice}
+            hasDiscount={item.hasDiscount}
+            discount={item.discount}
+            className="flex items-center justify-center gap-2"
+          />
         </div>
 
         <div className="relative w-48 h-48 mx-auto flex justify-center items-center overflow-hidden bg-[#F6F7FB] rounded-lg">
@@ -110,6 +114,7 @@ const ProductItem = ({ item }: { item: Product }) => {
         </div>
 
         <div className="absolute left-0 bottom-0 translate-y-full w-full flex items-center justify-center gap-2.5 pb-5 ease-linear duration-200 group-hover:translate-y-0">
+          {/* the modal view activatiation button */}
           <button
             onClick={() => {
               openModal();

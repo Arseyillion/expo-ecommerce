@@ -9,6 +9,7 @@ import { addItemToCart } from "@/redux/features/cart-slice";
 import Image from "next/image";
 import Link from "next/link";
 import { addItemToWishlist } from "@/redux/features/wishlist-slice";
+import PriceDisplay from "../../Common/PriceDisplay";
 
 const SingleItem = ({ item }: { item: Product }) => {
   const { openModal } = useModalContext();
@@ -84,10 +85,13 @@ const SingleItem = ({ item }: { item: Product }) => {
             <Link href="/shop-details"> {item.title} </Link>
           </h3>
 
-          <span className="flex items-center justify-center gap-2 font-medium text-lg">
-            <span className="text-dark">${item.discountedPrice}</span>
-            <span className="text-dark-4 line-through">${item.price}</span>
-          </span>
+          <PriceDisplay
+            price={item.price}
+            discountedPrice={item.discountedPrice}
+            hasDiscount={item.hasDiscount}
+            discount={item.discount}
+            className="flex items-center justify-center gap-2 font-medium text-lg"
+          />
         </div>
 
         <div className="flex justify-center items-center">

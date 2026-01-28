@@ -63,7 +63,7 @@ const QuickViewModal = () => {
   return (
     <div
       className={`${isModalOpen ? "z-99999" : "hidden"
-        } fixed top-0 left-0 overflow-y-auto no-scrollbar w-full h-screen sm:py-20 xl:py-25 2xl:py-[230px] bg-dark/70 sm:px-8 px-4 py-5`}
+        } fixed top-0 left-0 overflow-y-auto no-scrollbar w-full h-screen sm:py-20 xl:py-25 2xl:py-[230px] bg-dark/70 sm:px-8 px-4 py-5 `}
     >
       <div className="flex items-center justify-center ">
         <div className="w-full max-w-[1100px] rounded-xl shadow-3 bg-white p-7.5 relative modal-content">
@@ -149,9 +149,9 @@ const QuickViewModal = () => {
             </div>
 
             <div className="max-w-[445px] w-full">
-              <span className="inline-block text-custom-xs font-medium text-white py-1 px-3 bg-green mb-6.5">
-                SALE 20% OFF
-              </span>
+             { product.discount > 0 && <span className="inline-block text-custom-xs font-medium text-white py-1 px-3 bg-green mb-6.5">
+              SALE {product.discount}% OFF
+              </span>}
 
               <h3 className="font-semibold text-xl xl:text-heading-5 text-dark mb-4">
                 {product.title}
@@ -303,8 +303,7 @@ const QuickViewModal = () => {
               </div>
 
               <p>
-                Lorem Ipsum is simply dummy text of the printing and typesetting
-                industry. Lorem Ipsum has.
+                {product.description}
               </p>
 
               <div className="flex flex-wrap justify-between gap-5 mt-6 mb-7.5">

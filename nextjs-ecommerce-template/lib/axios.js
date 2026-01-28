@@ -1,8 +1,7 @@
 import axios from "axios";
 
 // important
-{/**
-
+/*
     withCredentials: true,
 
     This is extremely important and commonly misunderstood.
@@ -14,11 +13,9 @@ HttpOnly cookies
 CSRF-protected authentication
 Without this:
 Your backend may authenticate you
-But the browser won’t send the session cookie
-Result: “Why am I always logged out?” bugs
-
-
-    */}
+But the browser won't send the session cookie
+Result: "Why am I always logged out?" bugs
+*/
 
 // Use NEXT_PUBLIC_API_URL for client-side Next.js env var. Fall back to '/api'
 // so requests like `/products/...` become `/api/products/...` on the same origin.
