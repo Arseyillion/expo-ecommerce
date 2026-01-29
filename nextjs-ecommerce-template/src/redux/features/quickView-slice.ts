@@ -12,9 +12,10 @@ const initialState = {
     price: 0,
     discountedPrice: 0,
     img: "",
-    id: 0,
+    id: "", // Changed from 0 to empty string
     images: [],
     imgs: { thumbnails: [], previews: [] },
+    description: "",
   } as Product,
 } as InitialState;
 

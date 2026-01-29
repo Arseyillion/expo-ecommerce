@@ -1,11 +1,16 @@
 import express from "express";
 import path from "path";
+import { fileURLToPath } from "url";
 import { ENV } from "./config/env.js";
 import { connectDB } from "./config/db.js";
 import { clerkMiddleware } from "@clerk/express";
 import { serve } from "inngest/express";
 import { functions, inngest } from "./config/inngest.js";
 import { syncUser, deleteUserFromDB } from "./config/inngest.js";
+
+// Compute __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 import adminRoutes from "./routes/admin.route.js";
 import userRoutes from "./routes/user.route.js";
@@ -22,10 +27,6 @@ import { handleWebhook } from "./controllers/payment.controller.js";
 import cors from "cors";  
 
 const app = express();
-
-
-// Get the full path of the current file
-const __dirname = path.resolve();
 
 // CRITICAL: Raw body parser for Stripe webhook MUST come before JSON parser
 app.post(

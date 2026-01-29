@@ -67,6 +67,7 @@ const NewArrivalsList = () => {
   const mapped = data.products.map((p: any) => ({
     id: p._id,
     title: p.name,
+    description: p.description, // ✅ Added missing description field
     reviews: p.totalReviews || 0,
     price: p.price || 0,
     discountedPrice: p.discountedPrice || p.price || 0,

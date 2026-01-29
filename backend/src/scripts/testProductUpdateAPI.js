@@ -62,9 +62,11 @@ async function testProductUpdateAPI() {
     console.log("📋 Verified from database:");
     console.log(`  - ${updatedProduct.name}: discount=${updatedProduct.discount}, hasDiscount=${updatedProduct.hasDiscount}, discountedPrice=${updatedProduct.discountedPrice}`);
     
-    await mongoose.disconnect();
   } catch (error) {
     console.error("❌ Error:", error);
+  } finally {
+    await mongoose.disconnect();
+    console.log("🔌 Disconnected from MongoDB");
   }
 }
 

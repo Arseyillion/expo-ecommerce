@@ -2,12 +2,13 @@ import { Product } from "@/types/product";
 const shopData: Product[] = [
   {
     title: "Havit HV-G69 USB Gamepad",
+    description: "Professional gaming controller with precision controls and ergonomic design for extended gaming sessions.",
     reviews: 15,
     price: 59.0,
     discountedPrice: 29.0,
     discount: 51,
     hasDiscount: true,
-    id: 1,
+    id: "1",
     imgs: {
       thumbnails: [
         "/images/products/product-1-sm-1.png",
@@ -21,12 +22,13 @@ const shopData: Product[] = [
   },
   {
     title: "iPhone 14 Plus , 6/128GB",
+    description: "Latest iPhone with stunning display, advanced camera system, and all-day battery life.",
     reviews: 5,
     price: 899.0,
     discountedPrice: 99.0,
     discount: 89,
     hasDiscount: true,
-    id: 2,
+    id: "2",
     imgs: {
       thumbnails: [
         "/images/products/product-2-sm-1.png",
@@ -40,12 +42,13 @@ const shopData: Product[] = [
   },
   {
     title: "Apple iMac M1 24-inch 2021",
+    description: "Powerful all-in-one desktop with M1 chip, stunning 4.5K Retina display, and vibrant color.",
     reviews: 5,
     price: 59.0,
     discountedPrice: 29.0,
     discount: 51,
     hasDiscount: true,
-    id: 3,
+    id: "3",
     imgs: {
       thumbnails: [
         "/images/products/product-3-sm-1.png",
@@ -59,12 +62,13 @@ const shopData: Product[] = [
   },
   {
     title: "MacBook Air M1 chip, 8/256GB",
+    description: "Ultra-thin laptop with incredible performance, all-day battery, and silent operation.",
     reviews: 6,
     price: 59.0,
     discountedPrice: 29.0,
     discount: 51,
     hasDiscount: true,
-    id: 4,
+    id: "4",
     imgs: {
       thumbnails: [
         "/images/products/product-4-sm-1.png",
@@ -78,12 +82,13 @@ const shopData: Product[] = [
   },
   {
     title: "Apple Watch Ultra",
+    description: "Rugged smartwatch designed for adventure with advanced health features and extreme durability.",
     reviews: 3,
     price: 99.0,
     discountedPrice: 29.0,
     discount: 71,
     hasDiscount: true,
-    id: 5,
+    id: "5",
     imgs: {
       thumbnails: [
         "/images/products/product-5-sm-1.png",
@@ -97,12 +102,13 @@ const shopData: Product[] = [
   },
   {
     title: "Logitech MX Master 3 Mouse",
+    description: "Precision wireless mouse with ergonomic design and customizable buttons for productivity.",
     reviews: 15,
     price: 59.0,
     discountedPrice: 29.0,
     discount: 51,
     hasDiscount: true,
-    id: 6,
+    id: "6",
     imgs: {
       thumbnails: [
         "/images/products/product-6-sm-1.png",
@@ -116,12 +122,13 @@ const shopData: Product[] = [
   },
   {
     title: "Apple iPad Air 5th Gen - 64GB",
+    description: "Versatile tablet with powerful M1 chip, stunning Liquid Retina display, and all-day battery.",
     reviews: 15,
     price: 59.0,
     discountedPrice: 29.0,
     discount: 51,
     hasDiscount: true,
-    id: 7,
+    id: "7",
     imgs: {
       thumbnails: [
         "/images/products/product-7-sm-1.png",
@@ -135,12 +142,13 @@ const shopData: Product[] = [
   },
   {
     title: "Asus RT Dual Band Router",
+    description: "High-speed WiFi router with dual-band connectivity, advanced security, and easy setup.",
     reviews: 15,
     price: 59.0,
     discountedPrice: 29.0,
     discount: 51,
     hasDiscount: true,
-    id: 8,
+    id: "8",
     imgs: {
       thumbnails: [
         "/images/products/product-8-sm-1.png",

@@ -27,19 +27,31 @@ async function addDiscountFieldsToExistingProducts() {
       return;
     }
 
-    // Update each product to add the missing fields
+    // Update each product to add only the missing fields
     for (const product of productsWithoutDiscountFields) {
-      await Product.updateOne(
-        { _id: product._id },
-        {
-          $set: {
-            discount: 0,
-            discountedPrice: product.price,
-            hasDiscount: false
-          }
-        }
-      );
-      console.log(`✅ Updated product: ${product.name}`);
+      const updateFields = {};
+      
+      // Only add fields that are missing
+      if (product.discount === undefined) {
+        updateFields.discount = 0;
+      }
+      if (product.discountedPrice === undefined) {
+        updateFields.discountedPrice = product.price;
+      }
+      if (product.hasDiscount === undefined) {
+        updateFields.hasDiscount = false;
+      }
+      
+      // Only update if there are fields to update
+      if (Object.keys(updateFields).length > 0) {
+        await Product.updateOne(
+          { _id: product._id },
+          { $set: updateFields }
+        );
+        console.log(`✅ Updated product: ${product.name} with fields:`, Object.keys(updateFields));
+      } else {
+        console.log(`⏭️  Skipped product: ${product.name} (all discount fields already exist)`);
+      }
     }
 
     console.log("🎉 Migration completed successfully!");

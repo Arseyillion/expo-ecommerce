@@ -5,13 +5,21 @@ const PromoBannersPage = () => {
   const [editingBanner, setEditingBanner] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
+  const [images, setImages] = useState([]);
   const queryClient = useQueryClient();
 
   // Helper function to get full image URL
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http')) return imagePath;
-    return `http://localhost:3000${imagePath}`;
+    
+    // Use configurable base URL with fallbacks
+    const baseUrl = import.meta.env.VITE_API_URL || window.location.origin;
+    const trimmedBase = baseUrl.replace(/\/$/, ''); // Remove trailing slash
+     const apiStrippedBase = trimmedBase.replace(/\/api\/?$/, ""); // Remove trailing /api
+    const normalizedPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`; // Ensure leading slash
+    
+    return `${apiStrippedBase}${normalizedPath}`;
   };
 
   // Fetch banners using useQuery
@@ -21,6 +29,7 @@ const PromoBannersPage = () => {
       const response = await fetch('/api/promo-banners');
       const data = await response.json();
       if (data.success) {
+        console.log(`promo data:`, data.data);
         return data.data;
       }
       throw new Error('Failed to fetch banners');
@@ -30,11 +39,10 @@ const PromoBannersPage = () => {
 
   // Mutations for CRUD operations
   const createMutation = useMutation({
-    mutationFn: async (bannerData) => {
+    mutationFn: async (formData) => {
       const response = await fetch('/api/promo-banners', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(bannerData),
+        body: formData, // Send FormData directly, not JSON
       });
       if (!response.ok) throw new Error('Failed to create banner');
       return response.json();
@@ -43,15 +51,15 @@ const PromoBannersPage = () => {
       queryClient.invalidateQueries({ queryKey: ['promoBanners', 'admin'] });
       setShowForm(false);
       setEditingBanner(null);
+      setPreviewImage(null);
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }) => {
+    mutationFn: async ({ id, formData }) => {
       const response = await fetch(`/api/promo-banners/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: formData, // Send FormData directly, not JSON
       });
       if (!response.ok) throw new Error('Failed to update banner');
       return response.json();
@@ -60,6 +68,7 @@ const PromoBannersPage = () => {
       queryClient.invalidateQueries({ queryKey: ['promoBanners', 'admin'] });
       setShowForm(false);
       setEditingBanner(null);
+      setPreviewImage(null);
     },
   });
 
@@ -93,31 +102,39 @@ const PromoBannersPage = () => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
-    const bannerData = {
-      title: formData.get('title'),
-      subtitle: formData.get('subtitle'),
-      description: formData.get('description'),
-      discount: formData.get('discount'),
-      buttonText: formData.get('buttonText'),
-      buttonLink: formData.get('buttonLink'),
-      backgroundColor: formData.get('backgroundColor'),
-      textColor: formData.get('textColor'),
-      buttonColor: formData.get('buttonColor'),
-      image: formData.get('image'),
-      imagePosition: formData.get('imagePosition'),
-      size: formData.get('size'),
-      priority: parseInt(formData.get('priority')),
-      startDate: formData.get('startDate'),
-      endDate: formData.get('endDate') || undefined,
-    };
+    // Create a new FormData object for the API
+    const apiFormData = new FormData();
+    
+    // Add all text fields
+    apiFormData.append('title', formData.get('title'));
+    apiFormData.append('description', formData.get('description'));
+    apiFormData.append('link', formData.get('buttonLink'));
+    apiFormData.append('buttonText', formData.get('buttonText'));
+    apiFormData.append('priority', formData.get('priority'));
+    apiFormData.append('isActive', 'true'); // Default to active
+    
+    // Add optional fields if they exist
+    if (formData.get('startDate')) {
+      apiFormData.append('startDate', formData.get('startDate'));
+    }
+    if (formData.get('endDate')) {
+      apiFormData.append('endDate', formData.get('endDate'));
+    }
+    
+    // Add image file from state if available
+    if (images.length > 0) {
+      apiFormData.append('image', images[0]);
+    }
 
     try {
       if (editingBanner) {
-        await updateMutation.mutateAsync({ id: editingBanner._id, data: bannerData });
+        await updateMutation.mutateAsync({ id: editingBanner._id, formData: apiFormData });
       } else {
-        await createMutation.mutateAsync(bannerData);
+        await createMutation.mutateAsync(apiFormData);
       }
       e.currentTarget.reset();
+      setPreviewImage(null);
+      setImages([]);
     } catch (error) {
       console.error('Error saving banner:', error);
     }
@@ -135,6 +152,20 @@ const PromoBannersPage = () => {
       } catch (error) {
         console.error('Error deleting banner:', error);
       }
+    }
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]; // Get single file for promo banner
+    
+    if (file) {
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setPreviewImage(previewUrl);
+      setImages([file]); // Store as single file array
+    } else {
+      setPreviewImage(null);
+      setImages([]);
     }
   };
 
@@ -257,14 +288,33 @@ const PromoBannersPage = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Image URL</label>
+                  <label className="block text-sm font-medium mb-1">Banner Image</label>
                   <input
                     name="image"
-                    type="text"
-                    defaultValue={editingBanner?.image}
-                    className="input input-bordered w-full"
-                    placeholder="/images/promo/promo-01.png"
+                    type="file"
+                    accept="image/*"
+                    className="file-input file-input-bordered w-full"
+                    onChange={handleImageChange}
                   />
+                  {previewImage && (
+                    <div className="mt-3">
+                      <p className="text-xs text-gray-600 mb-1">New image preview:</p>
+                      <img 
+                        src={previewImage} 
+                        alt="Preview" 
+                        className="w-32 h-32 object-cover rounded border border-gray-200"
+                      />
+                    </div>
+                  )}
+                  {editingBanner?.image && !previewImage && (
+                    <div className="mt-3">
+                      <p className="text-xs text-gray-600 mb-1">Current image:</p>
+                      <img
+                        src={getImageUrl(editingBanner.image)}
+                        alt="Current"
+                        className="w-32 h-32 object-cover rounded border border-gray-200" />
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Image Position</label>
@@ -411,30 +461,6 @@ const PromoBannersPage = () => {
           </div>
         ))}
       </div>
-
-      {/* Image Preview Modal */}
-      {previewImage && (
-        <div className="modal modal-open" onClick={() => setPreviewImage(null)}>
-          <div className="modal-box max-w-4xl p-0" onClick={(e) => e.stopPropagation()}>
-            <div className="relative">
-              <button 
-                className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 z-10"
-                onClick={() => setPreviewImage(null)}
-              >
-                ✕
-              </button>
-              <img 
-                src={previewImage} 
-                alt="Preview" 
-                className="w-full h-auto rounded-lg"
-                onError={(e) => {
-                  e.target.src = 'https://via.placeholder.com/600x400?text=Image+Not+Available';
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

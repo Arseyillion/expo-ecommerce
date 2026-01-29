@@ -19,6 +19,7 @@ const QuickViewModal = () => {
 
   // get the product data
   const product = useAppSelector((state) => state.quickViewReducer.value);
+  console.log(`the data  in quick view`, product)
 
   const [activePreview, setActivePreview] = useState(0);
 
@@ -93,7 +94,7 @@ const QuickViewModal = () => {
             <div className="max-w-[526px] w-full">
               <div className="flex gap-5">
                 <div className="flex flex-col gap-5">
-                  {product.imgs.thumbnails?.map((img, key) => (
+                  {product.imgs.previews?.map((img, key) => (
                     <button
                       onClick={() => setActivePreview(key)}
                       key={key}
@@ -303,7 +304,7 @@ const QuickViewModal = () => {
               </div>
 
               <p>
-                {product.description}
+                {product.description || "No description"} 
               </p>
 
               <div className="flex flex-wrap justify-between gap-5 mt-6 mb-7.5">

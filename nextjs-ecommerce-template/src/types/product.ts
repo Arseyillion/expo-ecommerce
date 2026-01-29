@@ -1,3 +1,5 @@
+import { ReactNode } from 'react';
+
 export type Product = {
   description: ReactNode;
   title: string;
@@ -6,7 +8,7 @@ export type Product = {
   discountedPrice: number;
   discount?: number;
   hasDiscount?: boolean;
-  id: number;
+  id: string; // Changed from number to string to match backend _id
   imgs?: {
     thumbnails: string[];
     previews: string[];

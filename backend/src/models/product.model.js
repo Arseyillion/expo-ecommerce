@@ -71,25 +71,31 @@ productSchema.pre('save', function(next) {
 });
 
 // Pre-update middleware for updates
-productSchema.pre(['findOneAndUpdate', 'updateOne'], function(next) {
+productSchema.pre(['findOneAndUpdate', 'updateOne'], async function(next) {
     const update = this.getUpdate();
-    if (update.discount !== undefined) {
-        // We need to get the current document to access the price
-        this.findOne().then(doc => {
+     const discount = update.discount ?? update.$set?.discount;
+    
+    if (discount !== undefined) {
+        try {
+            // Get the current document to access the price
+            const doc = await this.findOne();
             if (doc) {
-                const price = update.price || doc.price;
-                if (update.discount > 0) {
-                    update.$set = update.$set || {};
-                    update.$set.discountedPrice = price * (1 - update.discount / 100);
+                const price = update.price || update.$set?.price || doc.price;
+                const discountValue = parseFloat(discount);
+                
+                update.$set = update.$set || {};
+                if (discountValue > 0) {
+                    update.$set.discountedPrice = price * (1 - discountValue / 100);
                     update.$set.hasDiscount = true;
                 } else {
-                    update.$set = update.$set || {};
                     update.$set.discountedPrice = price;
                     update.$set.hasDiscount = false;
                 }
             }
             next();
-        }).catch(err => next(err));
+        } catch (err) {
+            next(err);
+        }
     } else {
         next();
     }

@@ -76,6 +76,10 @@ const promoBannerSchema = new mongoose.Schema({
     endDate: {
         type: Date,
         required: false
+    },
+    seedId: {
+    type: String,
+    required: false
     }
 }, { timestamps: true });
 
