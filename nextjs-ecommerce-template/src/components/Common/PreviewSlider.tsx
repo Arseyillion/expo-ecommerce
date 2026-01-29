@@ -18,18 +18,14 @@ const PreviewSliderModal = () => {
   const images = data?.imgs?.previews || (data as any)?.images || [];
 
   const handlePrev = useCallback(() => {
-    console.log('Prev button clicked');
     if (currentImageIndex > 0) {
       setCurrentImageIndex(currentImageIndex - 1);
-      console.log('Changed to image:', currentImageIndex - 1);
     }
   }, [currentImageIndex]);
 
   const handleNext = useCallback(() => {
-    console.log('Next button clicked');
     if (currentImageIndex < images.length - 1) {
       setCurrentImageIndex(currentImageIndex + 1);
-      console.log('Changed to image:', currentImageIndex + 1);
     }
   }, [currentImageIndex, images.length]);
 
@@ -56,15 +52,6 @@ const PreviewSliderModal = () => {
       setImagesLoaded(true);
     }
   }, [isModalPreviewOpen]);
-
-  // Debug logging
-  console.log('PreviewSlider Debug:', {
-    isModalPreviewOpen,
-    imagesCount: images.length,
-    currentImageIndex,
-    images,
-    currentImage: images[currentImageIndex]
-  });
 
   return (
     <div
@@ -157,7 +144,7 @@ const PreviewSliderModal = () => {
                   Image {currentImageIndex + 1}
                 </div>
                 <Image
-                  src={images[currentImageIndex]}
+                  src={images[currentImageIndex] || "/images/products/product-1-bg-1.png"}
                   alt={`product image ${currentImageIndex + 1}`}
                   width={450}
                   height={450}

@@ -8,6 +8,7 @@ import {
     deletePromoBanner,
     togglePromoBanner
 } from "../controllers/promoBanner.controller.js";
+import { protectRoute, adminOnly } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
@@ -15,11 +16,11 @@ const router = express.Router();
 router.get("/active", getActivePromoBanners);
 router.get("/:id", getPromoBannerById);
 
-// Admin routes (add authentication middleware as needed)
-router.post("/", createPromoBanner);
-router.get("/", getAllPromoBanners);
-router.put("/:id", updatePromoBanner);
-router.delete("/:id", deletePromoBanner);
-router.patch("/:id/toggle", togglePromoBanner);
+// Admin routes - protected with authentication and admin-only access
+router.post("/", protectRoute, adminOnly, createPromoBanner);
+router.get("/", protectRoute, adminOnly, getAllPromoBanners);
+router.put("/:id", protectRoute, adminOnly, updatePromoBanner);
+router.delete("/:id", protectRoute, adminOnly, deletePromoBanner);
+router.patch("/:id/toggle", protectRoute, adminOnly, togglePromoBanner);
 
 export default router;

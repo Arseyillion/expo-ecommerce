@@ -34,9 +34,11 @@ async function checkDiscountFields() {
       console.log(`  - ${p.name}: discount=${p.discount}, hasDiscount=${p.hasDiscount}, discountedPrice=${p.discountedPrice}`);
     });
     
-    await mongoose.disconnect();
   } catch (error) {
     console.error("❌ Error:", error);
+  } finally {
+    await mongoose.disconnect();
+    console.log("🔌 Disconnected from MongoDB");
   }
 }
 

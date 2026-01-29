@@ -24,9 +24,19 @@ export const getActivePromoBanners = async (req, res) => {
         const now = new Date();
         const banners = await PromoBanner.find({
             isActive: true,
-            $or: [
-                { endDate: { $exists: false } },
-                { endDate: { $gt: now } }
+            $and: [
+                {
+                    $or: [
+                        { startDate: { $exists: false } },
+                        { startDate: { $lte: now } }
+                    ]
+                },
+                {
+                    $or: [
+                        { endDate: { $exists: false } },
+                        { endDate: { $gt: now } }
+                    ]
+                }
             ]
         }).sort({ priority: -1, createdAt: -1 });
 

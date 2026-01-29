@@ -13,7 +13,8 @@ const discountedProducts = [
     hasDiscount: true,
     averageRating: 4.5,
     totalReviews: 128,
-    isNewArrival: true
+    isNewArrival: true,
+    seeded: true // Add seeded flag
   },
   {
     name: "Smart Watch Pro",
@@ -27,7 +28,8 @@ const discountedProducts = [
     hasDiscount: true,
     averageRating: 4.3,
     totalReviews: 89,
-    isNewArrival: false
+    isNewArrival: false,
+    seeded: true // Add seeded flag
   },
   {
     name: "Organic Yoga Mat",
@@ -41,7 +43,8 @@ const discountedProducts = [
     hasDiscount: true,
     averageRating: 4.7,
     totalReviews: 203,
-    isNewArrival: false
+    isNewArrival: false,
+    seeded: true // Add seeded flag
   },
   {
     name: "Portable Coffee Maker",
@@ -55,7 +58,8 @@ const discountedProducts = [
     hasDiscount: true,
     averageRating: 4.2,
     totalReviews: 67,
-    isNewArrival: true
+    isNewArrival: true,
+    seeded: true // Add seeded flag
   },
   {
     name: "Running Shoes Ultra",
@@ -69,22 +73,29 @@ const discountedProducts = [
     hasDiscount: true,
     averageRating: 4.6,
     totalReviews: 156,
-    isNewArrival: false
+    isNewArrival: false,
+    seeded: true // Add seeded flag
   }
 ];
 
 export const seedDiscountedProducts = async () => {
   try {
-    // Clear existing discounted products
-    await Product.deleteMany({ discount: { $gt: 0 } });
+    // Only run in development or when explicitly requested
+    if (process.env.NODE_ENV !== 'development' && process.env.RUN_SEEDS !== 'true') {
+      console.log('⚠️  Skipping discounted products seed (not in development mode)');
+      return;
+    }
     
-    // Insert new discounted products
+    // Clear only existing seeded discounted products
+    await Product.deleteMany({ seeded: true });
+    
+    // Insert new seeded discounted products
     await Product.insertMany(discountedProducts);
     
     console.log('✅ Discounted products seeded successfully!');
     
     // Display the seeded products with their calculated prices
-    const products = await Product.find({ discount: { $gt: 0 } });
+    const products = await Product.find({ seeded: true });
     console.log('\n📦 Seeded Products with Discounts:');
     products.forEach(product => {
       console.log(`\n🏷️  ${product.name}`);

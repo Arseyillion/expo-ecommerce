@@ -11,7 +11,13 @@ const PromoBannersPage = () => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http')) return imagePath;
-    return `http://localhost:3000${imagePath}`;
+    
+    // Use configurable base URL with fallbacks
+    const baseUrl = process.env.REACT_APP_API_BASE_URL || window.location.origin;
+    const trimmedBase = baseUrl.replace(/\/$/, ''); // Remove trailing slash
+    const normalizedPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`; // Ensure leading slash
+    
+    return `${trimmedBase}${normalizedPath}`;
   };
 
   // Fetch banners using useQuery
