@@ -19,10 +19,6 @@ const ProductItem = ({ item }: { item: Product }) => {
 
   // update the QuickView state
   const handleQuickViewUpdate = () => {
-    console.log('🔍 PRODUCTITEM DEBUG - Item passed to QuickView:', item);
-    console.log('🔍 PRODUCTITEM DEBUG - Item description:', item.description);
-    console.log('🔍 PRODUCTITEM DEBUG - Item keys:', Object.keys(item));
-    
     dispatch(updateQuickView({ ...item }));
   };
 
@@ -52,7 +48,7 @@ const ProductItem = ({ item }: { item: Product }) => {
 
   return (
     <div className="group">
-      <div className="relative overflow-hidden flex items-center justify-center justify-center rounded-lg  bg-[#F6F7FB] min-h-[270px] mb-4 ">
+      <div className="relative overflow-hidden flex items-center  justify-center rounded-lg  bg-[#F6F7FB] min-h-[270px] mb-4 ">
          <div className="relative w-48 h-48 mx-auto flex justify-center items-center overflow-hidden bg-[#F6F7FB] rounded-lg">
           <Image 
             src={item.imgs.previews[0]} 

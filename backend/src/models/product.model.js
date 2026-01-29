@@ -73,7 +73,7 @@ productSchema.pre('save', function(next) {
 // Pre-update middleware for updates
 productSchema.pre(['findOneAndUpdate', 'updateOne'], async function(next) {
     const update = this.getUpdate();
-    const discount = update.discount || update.$set?.discount;
+     const discount = update.discount ?? update.$set?.discount;
     
     if (discount !== undefined) {
         try {
