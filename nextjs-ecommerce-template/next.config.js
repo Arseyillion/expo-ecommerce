@@ -69,6 +69,30 @@ const nextConfig = {
       'placehold.co',
     ],
   },
+  // Add webpack aliases for path resolution
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@/hooks': './hooks',
+    };
+    return config;
+  },
+  // Empty turbopack config to prevent errors
+  turbopack: {},
+  // Prevent Next.js from interfering with API requests
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:3001/api/:path*',
+      },
+      // Add specific rewrite for orders to prevent stripping
+      {
+        source: '/orders',
+        destination: 'http://localhost:3001/api/orders',
+      },
+    ];
+  },
 };
 
-module.exports = nextConfig;
+module.exports = nextConfig
