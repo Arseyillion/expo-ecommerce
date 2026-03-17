@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 
 export type Product = {
+   _id: string;
   description: ReactNode;
   title: string;
   reviews: number;
@@ -13,4 +14,8 @@ export type Product = {
     thumbnails: string[];
     previews: string[];
   };
+  features?: string[]; // Array of product features
+  name?: string; // Product name (used in ShopDetails)
+  images?: string[]; // Product images array (used in ShopDetails)
+  specifications?: Record<string, any>; // Product specifications object
 };

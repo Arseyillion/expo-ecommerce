@@ -11,6 +11,9 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import Link from "next/link";
 import PriceDisplay from "./PriceDisplay";
+import useCart from "../../../hooks/useCart";
+import { useState } from "react";
+import { toast } from 'sonner';
 
 const ProductItem = ({ item }: { item: Product }) => {
   const { openModal } = useModalContext();
@@ -23,14 +26,14 @@ const ProductItem = ({ item }: { item: Product }) => {
   };
 
   // add to cart
-  const handleAddToCart = () => {
-    dispatch(
-      addItemToCart({
-        ...item,
-        quantity: 1,
-      }),
-    );
-  };
+  // const handleAddToCart = () => {
+  //   dispatch(
+  //     addItemToCart({
+  //       ...item,
+  //       quantity: 1,
+  //     }),
+  //   );
+  // };
 
   const handleItemToWishList = () => {
     dispatch(
@@ -44,6 +47,34 @@ const ProductItem = ({ item }: { item: Product }) => {
 
   const handleProductDetails = () => {
     dispatch(updateproductDetails({ ...item }));
+  };
+
+  // CART FIX: Track which specific product is being added to cart
+  // This prevents all products from showing loading indicator when only one is being processed
+
+  const [addingToCartProductId, setAddingToCartProductId] = useState<string | null>(null);
+
+  const { addToCart, isAddingToCart } = useCart();
+
+  const handleAddToCart = (productId: string, productName: string) => {
+    console.log(`these are the contents of item in productsItem component ${JSON.stringify(item, null, 2)}`)
+    setAddingToCartProductId(productId); // Set loading state for this specific product
+    
+    addToCart(
+      { productId, quantity: 1 },
+      {
+        onSuccess: () => {
+         toast.success(`${productName} added to cart!`);
+          setAddingToCartProductId(null); // Reset loading state on success
+        },
+        onError: (error: any) => {
+          // CART FIX: Properly handle error response from API
+          const errorMessage = error?.response?.data?.error || error?.message || "Failed to add to cart";
+         toast.error( errorMessage);
+          setAddingToCartProductId(null); // Reset loading state on error
+        },
+      }
+    );
   };
 
   return (
@@ -95,7 +126,7 @@ const ProductItem = ({ item }: { item: Product }) => {
           </button>
 
           <button
-            onClick={() => handleAddToCart()}
+            onClick={() => handleAddToCart(item.id, item.name)}
             className="inline-flex font-medium text-custom-sm py-[7px] px-5 rounded-[5px] bg-blue text-white ease-out duration-200 hover:bg-blue-dark"
           >
             Add to cart
@@ -167,7 +198,7 @@ const ProductItem = ({ item }: { item: Product }) => {
             className="font-medium text-dark ease-out duration-200 hover:text-blue mb-1.5"
             onClick={() => handleProductDetails()}
           >
-            <Link href="/shop-details"> {item.title} </Link>
+            <Link href={`/shop-details?id=${item.id}`}> {item.title} </Link>
           </h3>
 
           <PriceDisplay
