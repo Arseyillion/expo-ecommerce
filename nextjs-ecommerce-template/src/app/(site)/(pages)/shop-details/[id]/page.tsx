@@ -8,10 +8,11 @@ export const metadata: Metadata = {
   // other metadata
 };
 
-const ShopDetailsPage = ({ params }: { params: { id: string } }) => {
+const ShopDetailsPage = async ({ params }: { params: Promise<{ id: string }> }) => {
+  const { id } = await params;
   return (
     <main>
-      <ShopDetails productId={params.id} />
+      <ShopDetails productId={id} />
     </main>
   );
 };

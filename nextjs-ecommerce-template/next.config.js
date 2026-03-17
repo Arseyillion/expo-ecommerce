@@ -81,17 +81,27 @@ const nextConfig = {
   turbopack: {},
   // Prevent Next.js from interfering with API requests
   async rewrites() {
-    return [
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    
+    // Normalize API URL to avoid double "/api"
+    const normalizedApiUrl = apiUrl.endsWith('/api') ? apiUrl.slice(0, -4) : apiUrl;
+    const apiDestination = `${normalizedApiUrl}/api/:path*`;
+    const ordersDestination = `${normalizedApiUrl}/api/orders`;
+    
+    const rewrites = [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:3001/api/:path*',
+        destination: isDevelopment ? 'http://localhost:3001/api/:path*' : apiDestination,
       },
       // Add specific rewrite for orders to prevent stripping
       {
         source: '/orders',
-        destination: 'http://localhost:3001/api/orders',
+        destination: isDevelopment ? 'http://localhost:3001/api/orders' : ordersDestination,
       },
     ];
+    
+    return rewrites;
   },
 };
 
