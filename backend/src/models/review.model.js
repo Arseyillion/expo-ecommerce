@@ -16,33 +16,28 @@ const reviewSchema = new mongoose.Schema({
         ref: "Order",
         required: true
     },
-    userName: {
-        type: String,
-        required: true
-    },
-    userImage: {
-        type: String,
-        default: ""
-    },
     rating: {
         type: Number,
         required: true,
         min: 1,
         max: 5
     },
-    title: {
-        type: String,
-        default: "",
-        maxlength: 100
-    },
     comment: {
         type: String,
-        default: "",
-        maxlength: 1000
+        required: true,
+        minlength: 1
     },
-    helpful: {
-        type: Number,
-        default: 0
+    title: {
+        type: String,
+        required: false
+    },
+    userImage: {
+        type: String,
+        required: false
+    },
+    userName: {
+        type: String,
+        required: false
     }
 }, { timestamps: true });
 

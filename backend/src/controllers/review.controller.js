@@ -18,7 +18,7 @@ export async function createReview(req, res) {
     }
 
     const user = req.user;
-
+   
     // verify order exists and is delivered
     const order = await Order.findById(orderId);
     if (!order) {
@@ -46,45 +46,16 @@ export async function createReview(req, res) {
     }
 
     // Get user name and image for the review
-    const userName = user.firstName && user.lastName 
-      ? `${user.firstName} ${user.lastName}` 
-      : user.email?.split('@')[0] || 'Anonymous';
-    
+    const userName = user.name || user.email?.split('@')[0] || 'Anonymous';
     const userImage = user.imageUrl || "";
 
     // atomic update or create
     const review = await Review.findOneAndUpdate(
       { productId, userId: user._id },
-      { 
-        rating, 
-        orderId, 
-        productId, 
-        userId: user._id, 
-        userName, 
-        userImage,
-        title: title || "",
-        comment: comment || ""
-      },
+      { rating, orderId, productId, userId: user._id, userName, userImage, title: title || "", comment: comment || "" },
       { new: true, upsert: true, runValidators: true }
     );
 
-
-    {/**
-        The issue is with our former code is that fetching all reviews, computing the average, and then updating the product happens in separate steps, so if two users submit reviews at the same time, both might read the same “stale” reviews array and compute the same average, causing inaccurate totals.
-
-        // current code that is NOT atomic
-        const reviews = await Review.find({ productId });
-        const totalRating = reviews.reduce((sum, rev) => sum + rev.rating, 0);
-        const updatedProduct = await Product.findByIdAndUpdate(
-        productId,
-        {
-            averageRating: totalRating / reviews.length,
-            totalReviews: reviews.length,
-        },
-        { new: true, runValidators: true }
-        );
-
-    */}
     // UPDATE THE PRODUCT RATING WITH AGGREGATION PIPELINE APPROACH
 
     // Step 1: Compute average rating and total review count atomically
@@ -133,51 +104,30 @@ export async function createReview(req, res) {
   }
 }
 
-export async function getReviewsByProduct(req, res) {
-  try {
-    const { productId } = req.params;
-
-    if (!productId) {
-      return res.status(400).json({ error: "Product ID is required" });
-    }
-
-    const reviews = await Review.find({ productId })
-      .populate('userId', 'firstName lastName email')
-      .sort({ createdAt: -1 });
-
-    res.status(200).json({ reviews });
-  } catch (error) {
-    console.error("Error in getReviewsByProduct controller:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-}
-
 export async function deleteReview(req, res) {
   try {
     const { reviewId } = req.params;
 
-    const user = req.user;
+    if (!reviewId) {
+      return res.status(400).json({ error: "Review ID is required" });
+    }
 
     const review = await Review.findById(reviewId);
     if (!review) {
       return res.status(404).json({ error: "Review not found" });
     }
 
-    if (review.userId.toString() !== user._id.toString()) {
-      return res
-        .status(403)
-        .json({ error: "Not authorized to delete this review" });
-    }
-
+    // Get product ID before deleting for rating recalculation
     const productId = review.productId;
+
     await Review.findByIdAndDelete(reviewId);
 
-       // Use aggregation pipeline to atomically compute stats
+    // Recalculate product rating
     const stats = await Review.aggregate([
       { $match: { productId: new mongoose.Types.ObjectId(productId) } },
       {
         $group: {
-          _id: null,
+          _id: "$productId",
           avgRating: { $avg: "$rating" },
           count: { $sum: 1 },
         },
@@ -196,6 +146,25 @@ export async function deleteReview(req, res) {
     res.status(200).json({ message: "Review deleted successfully" });
   } catch (error) {
     console.error("Error in deleteReview controller:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function getReviewsByProduct(req, res) {
+  try {
+    const { productId } = req.params;
+
+    if (!productId) {
+      return res.status(400).json({ error: "Product ID is required" });
+    }
+
+    const reviews = await Review.find({ productId })
+      .populate('userId', 'firstName lastName email')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ reviews });
+  } catch (error) {
+    console.error("Error in getReviewsByProduct controller:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 }
