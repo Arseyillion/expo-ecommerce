@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { PlusIcon, PencilIcon, Trash2Icon, XIcon, ImageIcon } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAdminCategories } from "../hooks/useCategories";
 import { productApi } from "../lib/api";
 import { getStockStatusBadge } from "../lib/utils";
 
@@ -15,9 +16,11 @@ function ProductsPage() {
     description: "",
     isNewArrival: false,
     discount: "",
+    features: "",
   });
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
+  const [specifications, setSpecifications] = useState([{ key: "", value: "" }]);
 
   const queryClient = useQueryClient();
 
@@ -28,6 +31,15 @@ function ProductsPage() {
   });
 
   const products = data?.products || [];
+
+  // Fetch categories for dropdown
+  const { 
+    data: categoriesData, 
+    isLoading: categoriesLoading, 
+    isError: categoriesError, 
+    error: categoriesErrorObj, 
+    refetch: refetchCategories 
+  } = useAdminCategories();
 
   // Group products by category and sort alphabetically within each category
   const groupedProducts = products.reduce((acc, product) => {
@@ -88,7 +100,9 @@ function ProductsPage() {
       description: "",
       isNewArrival: false,
       discount: "",
+      features: "",
     });
+    setSpecifications([{ key: "", value: "" }]);
     // revoke blob URLs to prevent memory leaks
     imagePreviews.forEach((url) => {
       if (url.startsWith("blob:")) URL.revokeObjectURL(url);
@@ -107,7 +121,20 @@ function ProductsPage() {
       description: product.description,
       isNewArrival: Boolean(product.isNewArrival),
       discount: product.discount ? product.discount.toString() : "",
+      features: product.features ? (Array.isArray(product.features) ? product.features.join(', ') : product.features) : "",
     });
+    
+    // Load existing specifications or set empty array
+    if (product.specifications && Object.keys(product.specifications).length > 0) {
+      const specsArray = Object.entries(product.specifications).map(([key, value]) => ({
+        key,
+        value: typeof value === 'string' ? value : JSON.stringify(value)
+      }));
+      setSpecifications(specsArray.length > 0 ? specsArray : [{ key: "", value: "" }]);
+    } else {
+      setSpecifications([{ key: "", value: "" }]);
+    }
+    
     setImagePreviews(product.images);
     setShowModal(true);
   };
@@ -125,6 +152,22 @@ function ProductsPage() {
     setImagePreviews(files.map((file) => URL.createObjectURL(file)));
   };
 
+  // Specification management functions
+  const addSpecification = () => {
+    setSpecifications([...specifications, { key: "", value: "" }]);
+  };
+
+  const removeSpecification = (index) => {
+    const newSpecs = specifications.filter((_, i) => i !== index);
+    setSpecifications(newSpecs.length > 0 ? newSpecs : [{ key: "", value: "" }]);
+  };
+
+  const updateSpecification = (index, field, value) => {
+    const newSpecs = [...specifications];
+    newSpecs[index][field] = value;
+    setSpecifications(newSpecs);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -132,6 +175,7 @@ function ProductsPage() {
     console.log("📝 Form data:", formData);
     console.log("🖼️ Images selected:", images.length);
     console.log("📝 Image previews:", imagePreviews.length);
+    console.log("⚙️ Specifications:", specifications);
     console.log("✏️ Editing product:", editingProduct ? editingProduct.name : "New product");
 
     // for new products, require images
@@ -147,6 +191,22 @@ function ProductsPage() {
     formDataToSend.append("category", formData.category);
     formDataToSend.append("isNewArrival", formData.isNewArrival ? "true" : "false");
     formDataToSend.append("discount", formData.discount || "0");
+    
+    // Add features as comma-separated string or JSON array
+    if (formData.features.trim()) {
+      const featuresArray = formData.features.split(',').map(f => f.trim()).filter(f => f);
+      formDataToSend.append("features", JSON.stringify(featuresArray));
+    }
+    
+    // Add specifications as JSON string
+    const specsObject = specifications
+      .filter(spec => spec.key.trim() && spec.value.trim())
+      .reduce((acc, spec) => {
+        acc[spec.key.trim()] = spec.value.trim();
+        return acc;
+      }, {});
+    
+    formDataToSend.append("specifications", JSON.stringify(specsObject));
     
     console.log("📤 FormData contents:");
     for (let [key, value] of formDataToSend.entries()) {
@@ -315,13 +375,34 @@ function ProductsPage() {
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   required
+                  disabled={categoriesLoading || categoriesError}
                 >
-                  <option value="">Select category</option>
-                  <option value="Electronics">Electronics</option>
-                  <option value="Accessories">Accessories</option>
-                  <option value="Fashion">Fashion</option>
-                  <option value="Sports">Sports</option>
+                  <option value="">
+                    {categoriesLoading ? "Loading categories..." : categoriesError ? "Error loading categories" : "Select category"}
+                  </option>
+                  {categoriesData?.categories?.map((category) => (
+                    <option key={category._id} value={category.name}>
+                      {category.name}
+                    </option>
+                  ))}
                 </select>
+                {categoriesError && (
+                  <div className="mt-2 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
+                    <p className="text-sm">Error: {categoriesErrorObj?.message || "Failed to load categories"}</p>
+                    <button 
+                      type="button" 
+                      onClick={refetchCategories}
+                      className="mt-2 px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                )}
+                {categoriesLoading && (
+                  <label className="label">
+                    <span className="label-text-alt text-info">Loading categories from database...</span>
+                  </label>
+                )}
               </div>
             </div>
 
@@ -384,6 +465,71 @@ function ProductsPage() {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 required
               />
+            </div>
+
+            <div className="form-control">
+              <label className="label">
+                <span>Key Features</span>
+                <span className="label-text-alt text-base-content/50">Enter comma-separated features (e.g., Waterproof, Wireless, Fast Charging)</span>
+              </label>
+              <input
+                type="text"
+                placeholder="e.g., Waterproof, Wireless, Fast Charging, Long Battery Life"
+                className="input input-bordered"
+                value={formData.features}
+                onChange={(e) => setFormData({ ...formData, features: e.target.value })}
+              />
+            </div>
+
+            {/* Specifications Section */}
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-semibold">Product Specifications</span>
+                <span className="label-text-alt text-xs opacity-60">Add technical specifications and attributes</span>
+              </label>
+              
+              <div className="space-y-3 bg-base-200 rounded-xl p-4">
+                {specifications.map((spec, index) => (
+                  <div key={index} className="flex gap-2 items-center">
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        placeholder="Specification name (e.g., Brand, Model, Display Size)"
+                        className="input input-bordered input-sm w-full"
+                        value={spec.key}
+                        onChange={(e) => updateSpecification(index, 'key', e.target.value)}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        placeholder="Value (e.g., Apple, iPhone 14, 6.7 inches)"
+                        className="input input-bordered input-sm w-full"
+                        value={spec.value}
+                        onChange={(e) => updateSpecification(index, 'value', e.target.value)}
+                      />
+                    </div>
+                    {specifications.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeSpecification(index)}
+                        className="btn btn-sm btn-circle btn-ghost text-error"
+                      >
+                        <XIcon className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                
+                <button
+                  type="button"
+                  onClick={addSpecification}
+                  className="btn btn-sm btn-outline btn-primary w-full"
+                >
+                  <PlusIcon className="w-4 h-4" />
+                  Add Specification
+                </button>
+              </div>
             </div>
 
             <div className="form-control">
