@@ -32,8 +32,14 @@ function ProductsPage() {
 
   const products = data?.products || [];
 
-  // Fetch categories for the dropdown
-  const { data: categoriesData, isLoading: categoriesLoading } = useAdminCategories();
+  // Fetch categories for dropdown
+  const { 
+    data: categoriesData, 
+    isLoading: categoriesLoading, 
+    isError: categoriesError, 
+    error: categoriesErrorObj, 
+    refetch: refetchCategories 
+  } = useAdminCategories();
 
   // Group products by category and sort alphabetically within each category
   const groupedProducts = products.reduce((acc, product) => {
@@ -369,10 +375,10 @@ function ProductsPage() {
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   required
-                  disabled={categoriesLoading}
+                  disabled={categoriesLoading || categoriesError}
                 >
                   <option value="">
-                    {categoriesLoading ? "Loading categories..." : "Select category"}
+                    {categoriesLoading ? "Loading categories..." : categoriesError ? "Error loading categories" : "Select category"}
                   </option>
                   {categoriesData?.categories?.map((category) => (
                     <option key={category._id} value={category.name}>
@@ -380,6 +386,18 @@ function ProductsPage() {
                     </option>
                   ))}
                 </select>
+                {categoriesError && (
+                  <div className="mt-2 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
+                    <p className="text-sm">Error: {categoriesErrorObj?.message || "Failed to load categories"}</p>
+                    <button 
+                      type="button" 
+                      onClick={refetchCategories}
+                      className="mt-2 px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                )}
                 {categoriesLoading && (
                   <label className="label">
                     <span className="label-text-alt text-info">Loading categories from database...</span>
