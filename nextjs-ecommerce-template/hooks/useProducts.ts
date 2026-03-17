@@ -1,5 +1,5 @@
+import { useApi } from '../lib/axios';
 import { useQuery } from "@tanstack/react-query";
-import axiosInstance from "../src/lib/axios";
 import { Product } from "../src/types/index";
 
 type ProductsResponse = {
@@ -13,7 +13,7 @@ type ProductsResponse = {
 };
 
 const useProducts = (page: number = 1, limit: number = 12) => {
-  const api = axiosInstance;
+  const api = useApi();
 
   const result = useQuery({
     queryKey: ["products", page, limit],

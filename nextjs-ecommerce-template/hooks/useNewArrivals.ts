@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import axiosInstance from "../lib/axios";
+import { useApi } from "../lib/axios";
 
 type ProductsResponse = {
   products: any[];
 };
 
 const useNewArrivals = (limit = 8) => {
-  const api = axiosInstance;
+  const api = useApi();
   
   const result = useQuery({
     queryKey: ["new-arrivals", limit],

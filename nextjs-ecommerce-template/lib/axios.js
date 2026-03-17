@@ -1,43 +1,56 @@
 import axios from "axios";
+import { useAuth } from "@clerk/nextjs";
+import { useEffect } from "react";
 
-// important
-/*
-    withCredentials: true,
-
-    This is extremely important and commonly misunderstood.
-
-What it does:Sends cookies along with every request
-Enables:
-Session-based auth
-HttpOnly cookies
-CSRF-protected authentication
-Without this:
-Your backend may authenticate you
-But the browser won't send the session cookie
-Result: "Why am I always logged out?" bugs
-*/
-
-// Use NEXT_PUBLIC_API_URL for client-side Next.js env var. Fall back to '/api'
-// so requests like `/products/...` become `/api/products/...` on the same origin.
-const baseURL = process.env.NEXT_PUBLIC_API_URL 
+// Use environment variable — stop hardcoding localhost
+const baseURL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
 const axiosInstance = axios.create({
   baseURL,
-  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
+  timeout: 60000,
 });
 
 // Add response interceptor to handle errors properly
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Don't swallow errors - just log and return the error so components can handle it
-    console.error("API Error:", error.message, {
+    console.error("API Error:", {
       url: error.config?.url,
       status: error.response?.status,
       data: error.response?.data,
     });
     return Promise.reject(error);
-  }
+  },
 );
 
-export default axiosInstance;
+export const useApi = () => {
+  const { getToken } = useAuth();
+
+  // Add request interceptor to include auth token
+  useEffect(() => {
+    const interceptor = axiosInstance.interceptors.request.use(
+      async (config) => {
+        try {
+          // Try to get JWT token - this is what backend expects
+          const token = await getToken();
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+          }
+        } catch (error) {
+          console.error("Error getting token:", error);
+        }
+        return config;
+      },
+      (error) => Promise.reject(error),
+    );
+
+    return () => {
+      axiosInstance.interceptors.request.eject(interceptor);
+    };
+  }, [getToken]);
+
+  return axiosInstance;
+};
