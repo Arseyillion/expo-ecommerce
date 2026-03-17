@@ -15,7 +15,25 @@ interface ShopDetailsProps {
 }
 
 const ShopDetails = ({ productId }: ShopDetailsProps) => {
-  console.log(`ShopDetails component received productId: ${productId}`);
+  console.log(`ShopDetails component received productId: ${productId}`, typeof productId);
+  
+  if (!productId || typeof productId !== 'string') {
+    return (
+      <main>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <p className="text-red-500 text-lg mb-4">Invalid or missing product ID</p>
+            <a 
+              href="/shop-with-sidebar" 
+              className="px-4 py-2 bg-blue text-white rounded hover:bg-blue-600 inline-block"
+            >
+              Browse Products
+            </a>
+          </div>
+        </div>
+      </main>
+    );
+  }
   
   const [activeColor, setActiveColor] = useState("blue");
   const { openPreviewModal } = usePreviewSlider();

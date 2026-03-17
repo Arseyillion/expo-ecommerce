@@ -52,7 +52,7 @@ export async function createReview(req, res) {
     // atomic update or create
     const review = await Review.findOneAndUpdate(
       { productId, userId: user._id },
-      { rating, orderId, productId, userId: user._id, userName, userImage, title: title || "", comment: comment || "" },
+      { rating, orderId, productId, userId: user._id, userName, userImage, title: title || "", comment },
       { new: true, upsert: true, runValidators: true }
     );
 
@@ -115,6 +115,11 @@ export async function deleteReview(req, res) {
     const review = await Review.findById(reviewId);
     if (!review) {
       return res.status(404).json({ error: "Review not found" });
+    }
+
+    // Ownership authorization check
+    if (review.userId.toString() !== req.user._id.toString() && req.user.role !== "admin") {
+      return res.status(403).json({ error: "Forbidden" });
     }
 
     // Get product ID before deleting for rating recalculation
