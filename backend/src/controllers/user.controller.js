@@ -68,14 +68,24 @@ export async function addAddress(req, res) {
     }
 
     /**
-     * 3️⃣ Build a MongoDB update object
-     * We are NOT modifying the user document in memory.
-     * Instead, we prepare instructions for MongoDB to execute atomically.
+     * 4️⃣ Handle "default address" logic and execute update
+     *
+     * If new address is marked as default:
+     * - First, unset isDefault on ALL existing addresses
+     * - Then, add the new address
+     *
+     * This uses two separate operations to avoid MongoDB conflicts
      */
+    if (isDefault) {
+      // Step 4a: Unset all existing defaults
+      await User.findByIdAndUpdate(
+        req.user._id,
+        { $set: { "addresses.$[].isDefault": false } }
+      );
+    }
+
+    // Step 4b: Add the new address
     const update = {
-      /**
-       * $push adds a new address object to the addresses array
-       */
       $push: {
         addresses: {
           label,
@@ -85,37 +95,16 @@ export async function addAddress(req, res) {
           state,
           zipCode,
           phoneNumber,
-
-          /**
-           * Convert isDefault to a true/false value
-           * This avoids undefined or null values
-           */
           isDefault: !!isDefault,
         },
       },
     };
 
     /**
-     * 4️⃣ Handle "default address" logic safely
-     *
-     * If the new address is marked as default:
-     * - We must unset isDefault on ALL existing addresses
-     * - This is done directly in the database (atomic operation)
-     *
-     * "addresses.$[].isDefault":
-     * - $[] means "every element in the addresses array"
-     */
-    if (isDefault) {
-      update.$set = {
-        "addresses.$[].isDefault": false,
-      };
-    }
-
-    /**
      * 5️⃣ Execute the database update
      *
      * findByIdAndUpdate:
-     * - Finds the user by ID
+     * - Finds user by ID
      * - Applies the update instructions
      * - Runs everything as a single database operation
      *

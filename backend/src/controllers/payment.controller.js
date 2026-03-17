@@ -168,7 +168,7 @@ export async function createPaymentIntent(req, res) {
         stripeCustomerId: customer.id,
       });
     }
-
+  
     // ─────────────────────────────────────────────
     // Metadata size-safe construction
     // ─────────────────────────────────────────────
@@ -357,7 +357,7 @@ export async function handleWebhook(req, res) {
     if (!parsedAddress.state) {
       parsedAddress.state = ""; // Add empty state if not provided
     }
-
+   
     const order = await Order.create({
       user: userId,
       clerkId,

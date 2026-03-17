@@ -56,6 +56,14 @@ const productSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    features: [{
+        type: String,
+    }],
+    specifications: {
+        type: Map,
+        of: mongoose.Schema.Types.Mixed,
+        default: new Map(),
+    },
 },{timestamps:true})
 
 // Pre-save middleware to calculate discounted price and hasDiscount flag
