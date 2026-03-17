@@ -25,6 +25,14 @@ const reviewSchema = new mongoose.Schema({
     comment: {
         type: String,
         required: true
+    },
+    userImage: {
+        type: String,
+        required: false
+    },
+    userName: {
+        type: String,
+        required: false
     }
 }, { timestamps: true });
 
