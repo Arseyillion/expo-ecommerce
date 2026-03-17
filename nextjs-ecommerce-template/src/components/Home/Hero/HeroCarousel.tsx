@@ -1,7 +1,7 @@
 "use client";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
-import { useCarousel } from "@/hooks/useCarousel";
+import { useCarousel } from "../../../../hooks/useCarousel";
 
 // Import Swiper styles
 import "swiper/css/pagination";
@@ -37,8 +37,8 @@ const HeroCarousal = () => {
         className="hero-carousel"
       >
         <SwiperSlide>
-          <div className="flex items-center pt-6 sm:pt-0 flex-col-reverse sm:flex-row">
-            <div className="max-w-[394px] py-10 sm:py-15 lg:py-24.5 pl-4 sm:pl-7.5 lg:pl-12.5">
+          <div className="flex items-center pt-6 sm:pt-0 flex-col-reverse sm:flex-row justify-between">
+            <div className="w-full lg:w-1/2 py-10 sm:py-15 lg:py-24.5 pl-4 sm:pl-7.5 lg:pl-12.5">
               <div className="flex items-center gap-4 mb-7.5 sm:mb-10">
                 <span className="block font-semibold text-heading-3 sm:text-heading-1 text-blue">
                   30%
@@ -66,7 +66,7 @@ const HeroCarousal = () => {
               </a>
             </div>
 
-            <div>
+            <div className="w-full lg:w-1/2 flex justify-center lg:justify-end">
               <Image
                 src="/images/hero/hero-01.png"
                 alt="headphone"
@@ -99,13 +99,13 @@ const HeroCarousal = () => {
         .sort((a, b) => a.order - b.order)
         .map((slide, index) => (
         <SwiperSlide key={index}>
-          <div className="flex items-center pt-6 sm:pt-0 flex-col-reverse sm:flex-row px-5">
-            <div className="max-w-[394px] py-10 sm:py-15 lg:py-24.5 pl-4 sm:pl-7.5 lg:pl-12.5">
-              <div className="flex items-center gap-4 mb-7.5 sm:mb-10">
+          <div className="flex items-center pt-6 sm:pt-0 flex-col-reverse sm:flex-row justify-between ">
+            <div className="w-full lg:w-1/2 py-10 sm:py-15 lg:py-24.5 pl-4 sm:pl-7.5 lg:pl-12.5  lg:ml-12">
+              <div className="flex items-center gap-4 mb-7.5 sm:mb-10 border-2 border-red-500">
                 <span className="block font-semibold text-heading-3 sm:text-heading-1 text-blue">
                   {slide.discountPercentage}
                 </span>
-                <span className="block text-dark text-sm sm:text-custom-1 sm:leading-[24px]">
+                <span className="block text-dark text-sm sm:text-custom-1 sm:leading-[24px] !w-30 border-red border-2">
                   {slide.discountText.split(' ').map((word, i) => (
                     <span key={i}>
                       {word}
@@ -131,7 +131,7 @@ const HeroCarousal = () => {
               </a>
             </div>
 
-            <div>
+            <div className="w-full lg:w-1/3 flex justify-center lg:justify-end lg:mr-20 ">
               <Image
                 src={slide.image}
                 alt={slide.title}

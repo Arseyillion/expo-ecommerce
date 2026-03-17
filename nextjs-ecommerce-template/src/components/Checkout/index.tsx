@@ -31,7 +31,7 @@ const Checkout = () => {
               {/* <!-- checkout left --> */}
               <div className="lg:max-w-[670px] w-full">
                 {/* <!-- login box --> */}
-                <Login />
+                {/* <Login /> */}
 
                 {/* <!-- billing details --> */}
                 <Billing />

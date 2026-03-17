@@ -4,10 +4,8 @@ import Link from "next/link";
 import CustomSelect from "./CustomSelect";
 import { menuData } from "./menuData";
 import Dropdown from "./Dropdown";
-import { useAppSelector } from "@/redux/store";
-import { useSelector } from "react-redux";
-import { selectTotalPrice } from "@/redux/features/cart-slice";
 import { useCartModalContext } from "@/app/context/CartSidebarModalContext";
+import useCart from "../../../hooks/useCart";
 import Image from "next/image";
 import { SignedOut,SignedIn, UserButton } from "@clerk/nextjs";
 
@@ -17,8 +15,9 @@ const Header = () => {
   const [stickyMenu, setStickyMenu] = useState(false);
   const { openCartModal } = useCartModalContext();
 
-  const product = useAppSelector((state) => state.cartReducer.items);
-  const totalPrice = useSelector(selectTotalPrice);
+  const { cart, cartItemCount } = useCart();
+
+  // console.log(`CART INFORMATION IN HEADER`, JSON.stringify(cart, null, 2), `CART ITEM COUNT: ${cartItemCount}`, `CART ITEMS LENGTH: ${cart?.items?.length || 0}`)
 
   const handleOpenCartModal = () => {
     openCartModal();
@@ -244,18 +243,19 @@ const Header = () => {
                     </svg>
 
                     <span className="flex items-center justify-center font-medium text-2xs absolute -right-2 -top-2.5 bg-blue w-4.5 h-4.5 rounded-full text-white">
-                      {product.length}
+                      {cart?.items?.length}
                     </span>
                   </span>
-
-                  <div>
+                  
+                  {/* We removed this functionality because we feel like its not necessary */}
+                  {/* <div>
                     <span className="block text-2xs text-dark-4 uppercase">
                       cart
                     </span>
                     <p className="font-medium text-custom-sm text-dark">
                       ${totalPrice}
                     </p>
-                  </div>
+                  </div> */}
                 </button>
               </div>
 

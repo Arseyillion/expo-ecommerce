@@ -1,7 +1,7 @@
 "use client";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { useCallback, useRef, useEffect, useState } from "react";
-import { useCategories } from "@/hooks/useCategories";
+import { useCategories } from "../../../../hooks/useCategories";
 import Image from "next/image";
 
 // Import Swiper styles
@@ -11,7 +11,7 @@ import SingleItem from "./SingleItem";
 
 const Categories = () => {
   const sliderRef = useRef(null);
-  const { categories, loading, error } = useCategories();
+  const { data: categoriesData, isLoading, error } = useCategories();
 
   const handlePrev = useCallback(() => {
     if (!sliderRef.current) return;
@@ -137,7 +137,7 @@ const Categories = () => {
               },
             }}
           >
-            {loading ? (
+            {isLoading ? (
               // Show loading skeleton
               Array.from({ length: 6 }).map((_, index) => (
                 <SwiperSlide key={`skeleton-${index}`}>
@@ -154,9 +154,9 @@ const Categories = () => {
                   Failed to load categories
                 </div>
               </SwiperSlide>
-            ) : (
+            ) : categoriesData && categoriesData.categories && categoriesData.categories.length > 0 ? (
               // Show categories
-              categories.map((item, key) => (
+              categoriesData.categories.map((item, key) => (
                 <SwiperSlide key={key}>
                   <SingleItem 
                     item={{
@@ -167,6 +167,13 @@ const Categories = () => {
                   />
                 </SwiperSlide>
               ))
+            ) : (
+              // Show empty state
+              <SwiperSlide>
+                <div className="text-center text-gray-500 p-4">
+                  No categories available
+                </div>
+              </SwiperSlide>
             )}
           </Swiper>
         </div>

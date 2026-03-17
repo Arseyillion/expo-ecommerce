@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import Breadcrumb from "../Common/Breadcrumb";
 import CustomSelect from "./CustomSelect";
 import CategoryDropdown from "./CategoryDropdown";
@@ -10,21 +11,55 @@ import PriceDropdown from "./PriceDropdown";
 import SingleGridItem from "../Shop/SingleGridItem";
 import SingleListItem from "../Shop/SingleListItem";
 import useProducts from "../../../hooks/useProducts";
+import { useCategories } from "../../../hooks/useCategories";
 
 const ShopWithSidebar = () => {
+  const searchParams = useSearchParams();
   const [productStyle, setProductStyle] = useState("grid");
   const [productSidebar, setProductSidebar] = useState(false);
   const [stickyMenu, setStickyMenu] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const productsPerPage = 12;
 
   // Fetch products using TanStack Query
   const { data: productsData, isLoading, isError, error } = useProducts(currentPage, productsPerPage);
 
+  // Fetch categories using TanStack Query
+  const { data: categoriesData, isLoading: categoriesLoading } = useCategories();
+
+  // Auto-select category from URL parameter
+  useEffect(() => {
+    const categoryParam = searchParams.get('category');
+    if (categoryParam && categoriesData?.categories) {
+      // Check if the category exists in our categories data
+      const categoryExists = categoriesData.categories.some(
+        (cat: any) => cat.name.toLowerCase() === categoryParam.toLowerCase()
+      );
+      
+      if (categoryExists && !selectedCategories.includes(categoryParam)) {
+        setSelectedCategories([categoryParam]);
+        console.log('🎯 Auto-selected category from URL:', categoryParam);
+      }
+    }
+  }, [searchParams, categoriesData, selectedCategories]);
+
+  // console.log(`categories:${JSON.stringify(categoriesData?.data, null, 2)}`)
+
   // Pagination handlers
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Category selection handler
+  const handleCategoryToggle = (categoryName: string) => {
+    setSelectedCategories(prev => 
+      prev.includes(categoryName)
+        ? prev.filter(cat => cat !== categoryName)
+        : [...prev, categoryName]
+    );
+    setCurrentPage(1); // Reset to first page when filtering
   };
 
   const handlePrevPage = () => {
@@ -49,11 +84,22 @@ const ShopWithSidebar = () => {
     discount: product.discount || 0,
     hasDiscount: product.hasDiscount || false,
     reviews: product.totalReviews || 0,
+    category: product.category, // Add category field
     imgs: {
       previews: product.images && product.images.length ? product.images : ["/images/products/product-1-bg-1.png"],
       thumbnails: product.images && product.images.length ? product.images.slice(0, 2) : ["/images/products/product-1-sm-1.png"],
     },
   })) || [];
+
+  // Filter products based on selected categories
+  const filteredProducts = selectedCategories.length > 0
+    ? mappedProducts.filter((product: any) => {
+        return selectedCategories.some(category => 
+          product.category?.toLowerCase() === category.toLowerCase() ||
+          product.title?.toLowerCase().includes(category.toLowerCase())
+        );
+      })
+    : mappedProducts;
 
   const handleStickyMenu = () => {
     if (window.scrollY >= 80) {
@@ -69,38 +115,36 @@ const ShopWithSidebar = () => {
     { label: "Old Products", value: "2" },
   ];
 
-  const categories = [
-    {
-      name: "Desktop",
-      products: 10,
-      isRefined: true,
-    },
-    {
-      name: "Laptop",
-      products: 12,
-      isRefined: false,
-    },
-    {
-      name: "Monitor",
-      products: 30,
-      isRefined: false,
-    },
-    {
-      name: "UPS",
-      products: 23,
-      isRefined: false,
-    },
-    {
-      name: "Phone",
-      products: 10,
-      isRefined: false,
-    },
-    {
-      name: "Watch",
-      products: 13,
-      isRefined: false,
-    },
-  ];
+  // Transform database categories to the expected format with product counts
+  const categories = useMemo(() => {
+    console.log('🔄 Recalculating categories...');
+    console.log('📊 categoriesData:', categoriesData);
+    console.log('🛍️ mappedProducts length:', mappedProducts.length);
+    
+    // Fix: API returns { categories: [...] } not { data: [...] }
+    if (!categoriesData?.categories) {
+      console.log('❌ No categories data available');
+      return [];
+    }
+    
+    const result = categoriesData.categories.map((category: any) => {
+      const productCount = mappedProducts.filter((product: any) => 
+        product.category?.toLowerCase() === category.name.toLowerCase() ||
+        product.title?.toLowerCase().includes(category.name.toLowerCase())
+      ).length;
+      
+      console.log(`📂 Category: ${category.name}, Products: ${productCount}`);
+      
+      return {
+        name: category.name,
+        products: productCount,
+        isRefined: false,
+      };
+    });
+    
+    console.log('✅ Final categories:', result);
+    return result;
+  }, [categoriesData, mappedProducts]);
 
   const genders = [
     {
@@ -197,7 +241,36 @@ const ShopWithSidebar = () => {
                   </div>
 
                   {/* <!-- category box --> */}
-                  <CategoryDropdown categories={categories} />
+                  {categoriesLoading ? (
+                    <div className="bg-white shadow-1 rounded-lg py-4 px-5">
+                      <div className="flex items-center justify-between">
+                        <p className="text-dark">Category</p>
+                        <div className="animate-pulse w-6 h-6 bg-gray-200 rounded"></div>
+                      </div>
+                      <div className="flex flex-col gap-3 py-6 pl-6 pr-5.5">
+                        {Array.from({ length: 4 }).map((_, index) => (
+                          <div key={index} className="animate-pulse">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 bg-gray-200 rounded"></div>
+                                <div className="h-4 bg-gray-200 rounded w-20"></div>
+                              </div>
+                              <div className="h-6 bg-gray-200 rounded w-8"></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {console.log('🚀 About to render CategoryDropdown with categories:', categories)}
+                      <CategoryDropdown 
+                        categories={categories} 
+                        selectedCategories={selectedCategories}
+                        onCategoryToggle={handleCategoryToggle}
+                      />
+                    </>
+                  )}
 
                   {/* <!-- gender box --> */}
                   <GenderDropdown genders={genders} />
@@ -226,9 +299,14 @@ const ShopWithSidebar = () => {
 
                     <p>
                       Showing <span className="text-dark">
-                        {mappedProducts.length} of {productsData?.pagination?.total || 0}
+                        {filteredProducts.length} of {productsData?.pagination?.total || 0}
                       </span>{" "}
                       Products
+                      {selectedCategories.length > 0 && (
+                        <span className="text-blue ml-2">
+                          (Filtered by: {selectedCategories.join(", ")})
+                        </span>
+                      )}
                     </p>
                   </div>
 
@@ -347,14 +425,27 @@ const ShopWithSidebar = () => {
                       Try Again
                     </button>
                   </div>
-                ) : mappedProducts.length === 0 ? (
+                ) : filteredProducts.length === 0 ? (
                   // Empty state
                   <div className="col-span-full text-center py-10">
-                    <p className="text-gray-500 text-lg">No products found</p>
+                    <p className="text-gray-500 text-lg">
+                      No products found 
+                      {selectedCategories.length > 0 && (
+                        <span> for categories: {selectedCategories.join(", ")}</span>
+                      )}
+                    </p>
+                    {selectedCategories.length > 0 && (
+                      <button 
+                        onClick={() => setSelectedCategories([])}
+                        className="mt-4 px-4 py-2 bg-blue text-white rounded hover:bg-blue-600"
+                      >
+                        Clear Filters
+                      </button>
+                    )}
                   </div>
                 ) : (
                   // Products display
-                  mappedProducts.map((item, key) =>
+                  filteredProducts.map((item, key) =>
                     productStyle === "grid" ? (
                       <SingleGridItem item={item} key={item.id || key} />
                     ) : (

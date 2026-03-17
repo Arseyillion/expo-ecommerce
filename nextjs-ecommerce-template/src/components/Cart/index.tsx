@@ -6,10 +6,27 @@ import { useAppSelector } from "@/redux/store";
 import SingleItem from "./SingleItem";
 import Breadcrumb from "../Common/Breadcrumb";
 import Link from "next/link";
+import useCart from "../../../hooks/useCart";
+import { useApi } from "@/lib/axios";
 
 const Cart = () => {
-  const cartItems = useAppSelector((state) => state.cartReducer.items);
+   const api = useApi();
+    const {
+      cart,
+      cartItemCount,
+      cartTotal,
+      clearCart,
+      isError,
+      isLoading,
+      isRemoving,
+      isUpdating,
+      removeFromCart,
+      updateQuantity,
+    } = useCart();
 
+    
+    const cartItems = cart?.items || [];
+   
   return (
     <>
       {/* <!-- ===== Breadcrumb Section Start ===== --> */}
@@ -61,7 +78,7 @@ const Cart = () => {
             </div>
 
             <div className="flex flex-col lg:flex-row gap-7.5 xl:gap-11 mt-9">
-              <Discount />
+              {/* <Discount /> */}
               <OrderSummary />
             </div>
           </div>
