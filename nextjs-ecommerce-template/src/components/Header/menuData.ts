@@ -74,6 +74,12 @@ export const menuData: Menu[] = [
         path: "/my-account",
       },
       {
+        id: 72,
+        title: "Orders",
+        newTab: false,
+        path: "/orders",
+      },
+      {
         id: 70,
         title: "Contact",
         newTab: false,
