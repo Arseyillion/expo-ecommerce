@@ -18,8 +18,7 @@ export async function createReview(req, res) {
     }
 
     const user = req.user;
-     console.log(`USER DATA : ${JSON.stringify(user, null, 2)}`)
-
+   
     // verify order exists and is delivered
     const order = await Order.findById(orderId);
     if (!order) {

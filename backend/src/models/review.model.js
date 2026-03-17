@@ -24,7 +24,12 @@ const reviewSchema = new mongoose.Schema({
     },
     comment: {
         type: String,
-        required: true
+        required: true,
+        minlength: 1
+    },
+    title: {
+        type: String,
+        required: false
     },
     userImage: {
         type: String,
