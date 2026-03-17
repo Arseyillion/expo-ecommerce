@@ -4,8 +4,6 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "dev:clean": "next dev -p 3000 --force",
-    "clean": "rm -rf .next && rm -rf node_modules/.cache || (rd /s /q .next && rd /s /q node_modules\\.cache)",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
