@@ -120,9 +120,21 @@ export async function createOrder(req, res) {
 
 export async function getUserOrders(req, res) {
   try {
-    const orders = await Order.find({ clerkId: req.user.clerkId })
+    // console.log(`\n📋 === GET USER ORDERS CONTROLLER START ===`);
+    // console.log(`📋 Request received from authenticated user`);
+    // console.log(`📋 req.user object:`, req.user ? { _id: req.user._id, email: req.user.email, clerkId: req.user.clerkId } : 'NO USER OBJECT');
+    
+
+    const clerkId = req.user.clerkId;
+    // console.log(`📋 Extracted clerkId: ${clerkId}`);
+    
+    // console.log(`📋 Querying orders for clerkId: ${clerkId}`);
+    const orders = await Order.find({ clerkId })
       .populate("orderItems.product")
       .sort({ createdAt: -1 });
+
+    // console.log(`📋 Found ${orders.length} orders`);
+    // console.log(`📋 Orders data:`, orders.map(o => ({ _id: o._id, status: o.status, total: o.totalPrice })));
 
     // check if each order has been reviewed
 
@@ -139,9 +151,13 @@ export async function getUserOrders(req, res) {
       })
     );
 
+    // console.log(`📋 Final orders with review status:`, ordersWithReviewStatus.length);
+    // console.log(`📋 Sending response:`, { orders: ordersWithReviewStatus });
+    // console.log(`📋 === GET USER ORDERS CONTROLLER END ===\n`);
+
     res.status(200).json({ orders: ordersWithReviewStatus });
   } catch (error) {
-    console.error("Error in getUserOrders controller:", error);
+    console.error("❌ Error in getUserOrders controller:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 }

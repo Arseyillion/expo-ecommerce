@@ -5,7 +5,7 @@ dotenv.config()
 // created to be imported and used whenever we want to use any of the values below
 export const ENV = {
     NODE_ENV:process.env.NODE_ENV,
-    PORT:process.env.PORT,
+    PORT:process.env.PORT || 3001, // Backend on port 3001 to match frontend
     DB_URL:process.env.DB_URL,
     CLERK_PUBLISHABLE_KEY:process.env.CLERK_PUBLISHABLE_KEY,
     CLERK_SECRET_KEY:process.env.CLERK_SECRET_KEY,
@@ -19,4 +19,5 @@ export const ENV = {
     STRIPE_PUBLISHABLE_KEY:process.env.STRIPE_PUBLISHABLE_KEY,
     STRIPE_WEBHOOK_SECRET:process.env.STRIPE_WEBHOOK_SECRET,
     WEBSITE_URL:process.env.WEBSITE_URL,
+    FLUTTERWAVE_SECRET_KEY:process.env.FLUTTERWAVE_SECRET_KEY,
 }

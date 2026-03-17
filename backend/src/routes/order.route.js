@@ -4,7 +4,9 @@ import { createOrder, getUserOrders } from "../controllers/order.controller.js";
 
 const router = Router();
 
-router.post("/", protectRoute, createOrder);
-router.get("/", protectRoute, getUserOrders);
+router.use(protectRoute);
+
+router.post("/", createOrder);
+router.get("/", getUserOrders);
 
 export default router;

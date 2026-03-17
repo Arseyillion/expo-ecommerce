@@ -10,8 +10,8 @@ export async function createProduct(req, res) {
     // Implementation for creating a product
     try {
         console.log("🔄 Starting product creation process");
-        const { name, description, price, stock, category, isNewArrival, discount } = req.body;
-        console.log("📝 Extracted form data:", { name, description, price, stock, category });
+        const { name, description, price, stock, category, isNewArrival, discount, features, specifications } = req.body;
+        console.log("📝 Extracted form data:", { name, description, price, stock, category, features, specifications });
 
         // if not all fields are provided
         if(!name || !description || !price || !stock || !category){
@@ -78,6 +78,30 @@ export async function createProduct(req, res) {
         }
         console.log("✅ Value parsing passed");
 
+        // Parse features if provided
+        let parsedFeatures = [];
+        if (features) {
+            try {
+                parsedFeatures = typeof features === 'string' ? JSON.parse(features) : features;
+                console.log("🏷️ Parsed features:", parsedFeatures);
+            } catch (error) {
+                console.log("⚠️ Features parsing failed, using empty array:", error.message);
+                parsedFeatures = [];
+            }
+        }
+
+        // Parse specifications if provided
+        let parsedSpecifications = {};
+        if (specifications) {
+            try {
+                parsedSpecifications = typeof specifications === 'string' ? JSON.parse(specifications) : specifications;
+                console.log("⚙️ Parsed specifications:", parsedSpecifications);
+            } catch (error) {
+                console.log("⚠️ Specifications parsing failed, using empty object:", error.message);
+                parsedSpecifications = {};
+            }
+        }
+
         console.log("💾 Creating product in database");
         const product = await Product.create({
             name,
@@ -88,6 +112,8 @@ export async function createProduct(req, res) {
           images:imageUrls,
           isNewArrival: Boolean(isNewArrival),
           discount: parsedDiscount,
+          features: parsedFeatures,
+          specifications: parsedSpecifications,
         });
         console.log("✅ Product created successfully:", product._id);
 
@@ -142,7 +168,7 @@ export async function updateProduct(req, res) {
         console.log("📝 Request files:", req.files);
         
         const { id } = req.params;
-        const { name, description, price, stock, category, isNewArrival, discount } = req.body;
+        const { name, description, price, stock, category, isNewArrival, discount, features, specifications } = req.body;
         
         console.log("📋 Extracted form data:", { 
             id, 
@@ -152,7 +178,9 @@ export async function updateProduct(req, res) {
             stock, 
             category, 
             isNewArrival, 
-            discount 
+            discount,
+            features,
+            specifications
         });
 
         const product = await Product.findById(id);
@@ -176,6 +204,26 @@ export async function updateProduct(req, res) {
         if (stock !== undefined) product.stock = parseInt(stock);
         if (category) product.category = category;
         if (isNewArrival !== undefined) product.isNewArrival = Boolean(isNewArrival);
+        
+        // Update features if provided
+        if (features !== undefined) {
+            try {
+                product.features = typeof features === 'string' ? JSON.parse(features) : features;
+                console.log("🏷️ Updated features:", product.features);
+            } catch (error) {
+                console.log("⚠️ Features parsing failed during update:", error.message);
+            }
+        }
+        
+        // Update specifications if provided
+        if (specifications !== undefined) {
+            try {
+                product.specifications = typeof specifications === 'string' ? JSON.parse(specifications) : specifications;
+                console.log("⚙️ Updated specifications:", product.specifications);
+            } catch (error) {
+                console.log("⚠️ Specifications parsing failed during update:", error.message);
+            }
+        }
         
         if (discount !== undefined) {
             console.log("💰 Updating discount field. Original discount:", product.discount, "New discount:", discount);
@@ -639,7 +687,8 @@ export async function updateCarousel(req, res) {
         
         for (let i = 0; i < parsedSlides.length; i++) {
           const slide = parsedSlides[i];
-          let imageUrl = slide.image; // Keep existing image by default
+          // Get existing image from database carousel, fallback to parsed slide image
+          let imageUrl = carousel.slides[i]?.image || slide.image;
           
           console.log(`🖼️ Processing slide ${i}:`, { title: slide.title, hasNewImage: !!req.files?.[`slide${i}Image`] });
           
