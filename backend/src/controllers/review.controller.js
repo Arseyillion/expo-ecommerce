@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 
 export async function createReview(req, res) {
   try {
-    const { productId, orderId, rating, title, comment } = req.body;
+    const { productId, orderId, rating } = req.body;
 
     if (!productId || !orderId) {
       return res
@@ -45,26 +45,10 @@ export async function createReview(req, res) {
       return res.status(400).json({ error: "Product not found in this order" });
     }
 
-    // Get user name and image for the review
-    const userName = user.firstName && user.lastName 
-      ? `${user.firstName} ${user.lastName}` 
-      : user.email?.split('@')[0] || 'Anonymous';
-    
-    const userImage = user.imageUrl || "";
-
     // atomic update or create
     const review = await Review.findOneAndUpdate(
       { productId, userId: user._id },
-      { 
-        rating, 
-        orderId, 
-        productId, 
-        userId: user._id, 
-        userName, 
-        userImage,
-        title: title || "",
-        comment: comment || ""
-      },
+      { rating, orderId, productId, userId: user._id },
       { new: true, upsert: true, runValidators: true }
     );
 
@@ -129,25 +113,6 @@ export async function createReview(req, res) {
     res.status(201).json({ message: "Review submitted successfully", review });
   } catch (error) {
     console.error("Error in createReview controller:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-}
-
-export async function getReviewsByProduct(req, res) {
-  try {
-    const { productId } = req.params;
-
-    if (!productId) {
-      return res.status(400).json({ error: "Product ID is required" });
-    }
-
-    const reviews = await Review.find({ productId })
-      .populate('userId', 'firstName lastName email')
-      .sort({ createdAt: -1 });
-
-    res.status(200).json({ reviews });
-  } catch (error) {
-    console.error("Error in getReviewsByProduct controller:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 }
