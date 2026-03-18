@@ -1,5 +1,5 @@
 import React from "react";
-import Checkout from "@/components/Checkout";
+import CartCheckout from "@/components/Checkout/CartCheckout";
 
 import { Metadata } from "next";
 export const metadata: Metadata = {
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 const CheckoutPage = () => {
   return (
     <main>
-      <Checkout />
+      <CartCheckout />
     </main>
   );
 };
