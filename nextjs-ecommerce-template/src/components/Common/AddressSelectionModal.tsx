@@ -117,6 +117,7 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
               onClick={handleSafeClose}
               disabled={isProcessing}
               aria-disabled={isProcessing}
+              aria-label="Close address selection modal"
               className={`p-2 rounded-lg transition-colors ${
                 isProcessing 
                   ? 'opacity-50 cursor-not-allowed' 
