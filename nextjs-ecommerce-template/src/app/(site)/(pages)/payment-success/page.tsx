@@ -119,8 +119,8 @@ const PaymentSuccess = () => {
                   <strong>Transaction ID:</strong> {verificationData.id}
                 </p>
                 <p className="text-sm text-gray-600 mb-2">
-                  <strong>Amount:</strong> ${verificationData.amount}{" "}
-                  {verificationData.currency}
+                  <strong>Amount:</strong> {verificationData.currency === "NGN" ? "₦" : "$"}
+                  {verificationData.amount} {verificationData.currency}
                 </p>
                 <p className="text-sm text-gray-600">
                   <strong>Order Reference:</strong> {verificationData.tx_ref}
