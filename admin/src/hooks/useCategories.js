@@ -20,5 +20,6 @@ export const useAdminCategories = () => {
       return data;
     },
     staleTime: 10 * 60 * 1000, // 10 minutes
+    retry: 2,
   });
 };

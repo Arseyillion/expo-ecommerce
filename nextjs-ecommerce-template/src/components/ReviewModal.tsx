@@ -58,10 +58,10 @@ const ReviewModal = ({ isOpen, onClose, order }: ReviewModalProps) => {
 
     // Check if all products are rated
     const allRated = order.orderItems.every((item) => {
-      if (!item.product?._id) return true; // Skip items without product data
-      const productId = item.product._id;
-      return ratings[productId] && ratings[productId] > 0;
-    });
+     if (!item.product?._id) return true; // Skip items without product data
+     const productId = item.product._id;
+     return (ratings[productId] ?? 0) > 0;
+   });
     
     if (!allRated) {
       alert("Please rate all products before submitting.");
@@ -84,9 +84,9 @@ const ReviewModal = ({ isOpen, onClose, order }: ReviewModalProps) => {
           await createReviewAsync({
             productId: productId,
             orderId: order._id,
-            rating: ratings[productId],
-            title: titles[productId] || "",
-            comment: comments[productId] || "",
+            rating: ratings[productId ?? '0'],
+            title: titles[productId ?? '0'] || "",
+            comment: comments[productId ?? '0'] || "",
           });
         } catch (error) {
           console.error(`Failed to create review for product ${productId}:`, error);

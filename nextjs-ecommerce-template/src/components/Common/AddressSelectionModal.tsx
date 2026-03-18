@@ -114,14 +114,8 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <h2 id="address-selection-modal-title" className="text-xl font-semibold text-gray-900">Select Address</h2>
             <button
-              onClick={handleSafeClose}
-              disabled={isProcessing}
-              aria-disabled={isProcessing}
-              className={`p-2 rounded-lg transition-colors ${
-                isProcessing 
-                  ? 'opacity-50 cursor-not-allowed' 
-                  : 'hover:bg-gray-100'
-              }`}
+              onClick={onClose}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
             >
               <svg
                 className="w-5 h-5 text-gray-500"
@@ -183,7 +177,7 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
                       : 'bg-cyan-500 text-white hover:bg-cyan-600'
                   }`}
                 >
-                  Add Your First Address
+                  Close
                 </button>
               </div>
             ) : (

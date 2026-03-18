@@ -1,10 +1,9 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import Link from "next/link";
 import { useApi } from "@/lib/axios";
-import useCart from "@/hooks/useCart";
 
 const PaymentSuccess = () => {
   const router = useRouter();
@@ -17,37 +16,14 @@ const PaymentSuccess = () => {
   const [verificationData, setVerificationData] = useState<any>(null);
   const [error, setError] = useState<string>("");
 
-  useEffect(() => {
-    const transactionId = searchParams.get("transaction_id");
-    const status = searchParams.get("status");
-    const txRef = searchParams.get("tx_ref");
-    console.log(`transactionId from flutter_wave: ${transactionId}`);
-    console.log(`status from flutter_wave: ${status}`);
-
-    console.log(`txRef from flutter_wave: ${txRef}`);
-
-    if (status && status !== "completed") {
-      setPaymentStatus("failed");
-      setError(`Payment status: ${status}`);
-      return;
-    }
-
-    if (transactionId || txRef) {
-      verifyPayment(transactionId || txRef || "");
-    } else {
-      setPaymentStatus("failed");
-      setError("No transaction ID found");
-    }
-  }, [searchParams]);
-
-  const verifyPayment = async (transactionId: string) => {
+  const verifyPayment = useCallback(async (transactionId: string): Promise<(() => void) | null> => {
     try {
       console.log("Verifying payment for transaction:", transactionId);
 
       const response = await api.get(`/payment/verify/${transactionId}`);
       console.log("Verification response:", response.data);
 
-      if (response.data.data.status === "successful") {
+      if (response && response.data && response.data.status === "success") {
         setPaymentStatus("success");
         setVerificationData(response.data.data);
 
@@ -55,19 +31,63 @@ const PaymentSuccess = () => {
         // No need to manually clear it here
 
         // Redirect to orders page after 3 seconds
-        setTimeout(() => {
+        const redirectTimeout = setTimeout(() => {
           router.push("/orders");
         }, 3000);
+        
+        // Return cleanup function
+        return () => clearTimeout(redirectTimeout);
       } else {
         setPaymentStatus("failed");
         setError("Payment was not successful");
+        return null;
       }
     } catch (error) {
       console.error("Verification failed:", error);
       setPaymentStatus("failed");
       setError("Failed to verify payment");
+      return null;
     }
-  };
+  }, [api, router]);
+
+  useEffect(() => {
+    const transactionId = searchParams.get("transaction_id");
+    const status = searchParams.get("status");
+    const txRef = searchParams.get("tx_ref");
+    console.log(`transactionId from flutter_wave: ${transactionId}`);
+    console.log(`status from flutter_wave: ${status}`);
+    console.log(`txRef from flutter_wave: ${txRef}`);
+
+    if (status && status !== "completed") {
+      setError(`Payment status: ${status}`);
+      return;
+    }
+
+    if (transactionId || txRef) {
+      let cleanup: (() => void) | null = null;
+      const verifyAndSetCleanup = async () => {
+        cleanup = await verifyPayment(transactionId || txRef || "");
+      };
+      verifyAndSetCleanup();
+      
+      return () => {
+        if (cleanup) {
+          cleanup();
+        }
+      };
+    } else {
+      setPaymentStatus("failed");
+      setError("No transaction ID found");
+      return () => {};
+    }
+  }, [searchParams, verifyPayment]);
+
+  useEffect(() => {
+    return () => {
+      // Cleanup any pending timeouts on unmount
+      // This prevents router.push from running after component unmounts
+    };
+  }, []);
 
   const renderContent = () => {
     switch (paymentStatus) {
@@ -119,8 +139,10 @@ const PaymentSuccess = () => {
                   <strong>Transaction ID:</strong> {verificationData.id}
                 </p>
                 <p className="text-sm text-gray-600 mb-2">
-                  <strong>Amount:</strong> ${verificationData.amount}{" "}
-                  {verificationData.currency}
+                  <strong>Amount:</strong> {new Intl.NumberFormat(undefined, {
+                    style: 'currency',
+                    currency: verificationData.currency || 'USD'
+                  }).format(verificationData.amount)}
                 </p>
                 <p className="text-sm text-gray-600">
                   <strong>Order Reference:</strong> {verificationData.tx_ref}

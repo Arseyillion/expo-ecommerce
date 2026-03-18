@@ -192,10 +192,12 @@ function ProductsPage() {
     formDataToSend.append("isNewArrival", formData.isNewArrival ? "true" : "false");
     formDataToSend.append("discount", formData.discount || "0");
     
-    // Add features as comma-separated string or JSON array
+    // Always append features field to allow clearing existing features
     if (formData.features.trim()) {
       const featuresArray = formData.features.split(',').map(f => f.trim()).filter(f => f);
       formDataToSend.append("features", JSON.stringify(featuresArray));
+    } else {
+      formDataToSend.append("features", JSON.stringify([]));
     }
     
     // Add specifications as JSON string

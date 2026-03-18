@@ -18,6 +18,7 @@ import ScrollToTop from "@/components/Common/ScrollToTop";
 import PreLoader from "@/components/Common/PreLoader";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Toaster } from 'sonner';
 
 export default function RootLayout({
   children,
@@ -61,6 +62,7 @@ export default function RootLayout({
           </ClerkProvider>
           </>
         )}
+        <Toaster />
       </body>
     </html>
   );
