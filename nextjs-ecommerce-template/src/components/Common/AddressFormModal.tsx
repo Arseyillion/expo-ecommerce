@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Address } from "../../../hooks/useAddresses";
 
 interface AddressFormData {
@@ -39,6 +39,29 @@ const AddressFormModal: React.FC<AddressFormModalProps> = ({
     phoneNumber: "",
     isDefault: false,
   });
+
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Escape key handling
+  useEffect(() => {
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscapeKey);
+      // Focus the modal on mount
+      if (modalRef.current) {
+        modalRef.current.focus();
+      }
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, [isOpen, onClose]);
 
   const [errors, setErrors] = useState<Partial<AddressFormData>>({});
 

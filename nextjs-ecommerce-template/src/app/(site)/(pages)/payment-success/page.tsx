@@ -10,7 +10,6 @@ const PaymentSuccess = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const api = useApi();
-  const { clearCart } = useCart();
 
   const [paymentStatus, setPaymentStatus] = useState<
     "verifying" | "success" | "failed"

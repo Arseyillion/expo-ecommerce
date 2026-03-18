@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useReviews } from "../../hooks/useReviews";
 import Image from "next/image";
@@ -18,6 +18,7 @@ const ReviewModal = ({ isOpen, onClose, order }: ReviewModalProps) => {
   const [ratings, setRatings] = useState<{ [key: string]: number }>({});
   const [titles, setTitles] = useState<{ [key: string]: string }>({});
   const [comments, setComments] = useState<{ [key: string]: string }>({});
+  const prevIsOpen = useRef(isOpen);
 
   const handleOpenRating = (order: Order) => {
     // Initialize ratings for all products to 0
@@ -119,11 +120,13 @@ const ReviewModal = ({ isOpen, onClose, order }: ReviewModalProps) => {
     );
   };
 
-  // Initialize ratings when modal opens
+  // Initialize ratings when modal opens (only on open transition)
   React.useEffect(() => {
-    if (isOpen && order) {
+    if (isOpen && !prevIsOpen.current && order) {
       handleOpenRating(order);
     }
+    // Update previous open state
+    prevIsOpen.current = isOpen;
   }, [isOpen, order]);
 
   if (!isOpen) return null;

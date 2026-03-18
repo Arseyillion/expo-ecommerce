@@ -17,8 +17,11 @@ const ProductListModal = ({ isOpen, onClose, order }: ProductListModalProps) => 
 
   if (!isOpen || !order) return null;
 
-  const handleViewProduct = (productId: string) => {
-    console.log(`Navigating to product: ${productId}`);
+  const handleViewProduct = (productId: string | undefined) => {
+    if (!productId) {
+      console.warn('Product ID is missing, cannot navigate');
+      return;
+    }
     onClose();
     router.push(`/shop-details?id=${productId}`);
   };
@@ -77,8 +80,13 @@ const ProductListModal = ({ isOpen, onClose, order }: ProductListModalProps) => 
                           Total: ${((item.product?.price || item.price) * item.quantity).toFixed(2)}
                         </p>
                         <button
-                          onClick={() => handleViewProduct(item.product?._id)}
-                          className="px-3 py-1 bg-primary text-white text-sm rounded hover:bg-primary/90 transition-colors"
+                          onClick={() => item.product?._id && handleViewProduct(item.product._id)}
+                          disabled={!item.product?._id}
+                          className={`px-3 py-1 text-sm rounded transition-colors ${
+                            item.product?._id
+                              ? 'bg-primary text-white hover:bg-primary/90'
+                              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          }`}
                         >
                           View Details
                         </button>
