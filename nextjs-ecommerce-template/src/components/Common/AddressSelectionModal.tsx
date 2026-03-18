@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Address } from "../../../hooks/useAddresses";
 import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
 
@@ -20,18 +20,72 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
   isLoading = false,
   isProcessing = false,
 }) => {
-  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
-  
+  // Reset and validate selection when addresses change or modal opens
+  useEffect(() => {
+    if (isOpen) {
+      // Focus the modal on mount
+      if (modalRef.current) {
+        modalRef.current.focus();
+      }
+    }
+    
+    // Validate existing selection against current addresses
+    if (selectedAddressId) {
+      const addressExists = addresses.find(addr => addr._id === selectedAddressId);
+      if (!addressExists) {
+        // Clear stale selection
+        setSelectedAddressId(null);
+      }
+    }
+  }, [addresses, isOpen, selectedAddressId]);
+
+  // Escape key handling
+  useEffect(() => {
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscapeKey);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, [isOpen, onClose]);
+
+  const getSelectedAddress = (): Address | null => {
+    if (!selectedAddressId) return null;
+    return addresses.find(addr => addr._id === selectedAddressId) || null;
+  };
 
   const handleProceed = () => {
+    const selectedAddress = getSelectedAddress();
     if (selectedAddress) {
       onProceed(selectedAddress);
     }
   };
 
   const handleAddressSelect = (address: Address) => {
-    setSelectedAddress(address);
+    setSelectedAddressId(address._id);
+  };
+
+  const handleAddressKeyDown = (event: React.KeyboardEvent, address: Address) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleAddressSelect(address);
+    }
+  };
+
+  const handleSafeClose = () => {
+    if (!isProcessing) {
+      onClose();
+    }
   };
 
   if (!isOpen) return null;
@@ -42,21 +96,32 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
       <div className="flex min-h-screen items-end justify-center p-4">
         {/* Backdrop */}
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-0"
-          onClick={onClose}
+          className={`fixed inset-0 bg-black bg-opacity-50 transition-opacity z-0 ${isProcessing ? 'pointer-events-none' : ''}`}
+          onClick={handleSafeClose}
         />
         
         {/* Modal */}
         <div
+          ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="address-selection-modal-title"
+          tabIndex={-1}
           className="relative z-10 w-full max-w-2xl bg-white rounded-t-2xl shadow-xl animate-slide-up"
           onMouseDown={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Select Address</h2>
+            <h2 id="address-selection-modal-title" className="text-xl font-semibold text-gray-900">Select Address</h2>
             <button
-              onClick={onClose}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              onClick={handleSafeClose}
+              disabled={isProcessing}
+              aria-disabled={isProcessing}
+              className={`p-2 rounded-lg transition-colors ${
+                isProcessing 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'hover:bg-gray-100'
+              }`}
             >
               <svg
                 className="w-5 h-5 text-gray-500"
@@ -109,8 +174,14 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
                   You haven't added any delivery addresses yet.
                 </p>
                 <button
-                  onClick={onClose}
-                  className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors"
+                  onClick={handleSafeClose}
+                  disabled={isProcessing}
+                  aria-disabled={isProcessing}
+                  className={`px-4 py-2 rounded-lg transition-colors ${
+                    isProcessing
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50'
+                      : 'bg-cyan-500 text-white hover:bg-cyan-600'
+                  }`}
                 >
                   Add Your First Address
                 </button>
@@ -118,11 +189,16 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
             ) : (
               <div className="space-y-3">
                 {addresses.map((address) => (
-                  <div
+                  <button
                     key={address._id}
+                    type="button"
                     onClick={() => handleAddressSelect(address)}
-                    className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                      selectedAddress?._id === address._id
+                    onKeyDown={(e) => handleAddressKeyDown(e, address)}
+                    role="button"
+                    aria-pressed={selectedAddressId === address._id}
+                    aria-selected={selectedAddressId === address._id}
+                    className={`w-full border rounded-lg p-4 cursor-pointer transition-all text-left ${
+                      selectedAddressId === address._id
                         ? "border-4 border-blue bg-[#f9f9f9]"
                         : "border-gray-200 hover:border-gray-400 hover:bg-gray-50"
                     }`}
@@ -152,11 +228,11 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
                       
                       <div className="ml-4 flex items-center">
                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                          selectedAddress?._id === address._id
+                          selectedAddressId === address._id
                             ? "border-dark bg-dark"
                             : "border-gray-300"
                         }`}>
-                          {selectedAddress?._id === address._id && (
+                          {selectedAddressId === address._id && (
                             <svg
                               className="w-3 h-3 text-white"
                               fill="currentColor"
@@ -172,7 +248,7 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -182,15 +258,16 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
           <div className="p-6 border-t border-gray-200 bg-gray-50">
             <div className="flex gap-3">
               <button
-                onClick={onClose}
+                onClick={handleSafeClose}
                 disabled={isProcessing}
+                aria-disabled={isProcessing}
                 className="flex-1 px-4 py-3 border border-gray-200 text-gray-900 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleProceed}
-                disabled={!selectedAddress || isProcessing}
+                disabled={!getSelectedAddress() || isProcessing}
                 className="flex-1 px-4 py-3 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors disabled:opacity-50 flex items-center justify-center bg-dark"
               >
                 {isProcessing ? (

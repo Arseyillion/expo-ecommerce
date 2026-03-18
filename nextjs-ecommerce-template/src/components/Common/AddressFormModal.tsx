@@ -130,22 +130,29 @@ const AddressFormModal: React.FC<AddressFormModalProps> = ({
         {/* Backdrop */}
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-0"
-          onClick={onClose}
+          onClick={() => !isSaving && onClose()}
         />
         
         {/* Modal */}
         <div
+          ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="address-modal-title"
+          tabIndex={-1}
           className="relative z-10 w-full max-w-lg bg-white rounded-xl shadow-xl"
           onMouseDown={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-3 md:mt-16 lg:mt-30 mt-50">
-            <h2 className="text-xl font-semibold text-dark">
+            <h2 id="address-modal-title" className="text-xl font-semibold text-dark">
               {isEditing ? "Edit Address" : "Add New Address"}
             </h2>
             <button
-              onClick={onClose}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              onClick={() => !isSaving && onClose()}
+              disabled={isSaving}
+              aria-disabled={isSaving}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg
                 className="w-5 h-5 text-gray-500"
@@ -168,135 +175,156 @@ const AddressFormModal: React.FC<AddressFormModalProps> = ({
           <form onSubmit={handleSubmit} className="p-6 space-y-4 pt-4">
             {/* Label */}
             <div>
-              <label className="block text-sm font-medium text-dark mb-2">
+              <label htmlFor="label" className="block text-sm font-medium text-dark mb-2">
                 Label
               </label>
               <input
+                id="label"
                 type="text"
                 value={formData.label}
                 onChange={(e) => handleChange("label", e.target.value)}
                 placeholder="e.g., Home, Work, Office"
+                aria-describedby={errors.label ? "label-error" : undefined}
+                aria-invalid={!!errors.label}
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue focus:border-transparent ${
                   errors.label ? "border-red-500" : "border-gray-3"
                 }`}
               />
               {errors.label && (
-                <p className="mt-1 text-sm text-red">{errors.label}</p>
+                <p id="label-error" className="mt-1 text-sm text-red">{errors.label}</p>
               )}
             </div>
 
             {/* Full Name */}
             <div>
-              <label className="block text-sm font-medium text-dark mb-2">
+              <label htmlFor="fullName" className="block text-sm font-medium text-dark mb-2">
                 Full Name
               </label>
               <input
+                id="fullName"
                 type="text"
                 value={formData.fullName}
                 onChange={(e) => handleChange("fullName", e.target.value)}
                 placeholder="Enter your full name"
+                aria-describedby={errors.fullName ? "fullName-error" : undefined}
+                aria-invalid={!!errors.fullName}
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue focus:border-transparent ${
                   errors.fullName ? "border-red-500" : "border-gray-3"
                 }`}
               />
               {errors.fullName && (
-                <p className="mt-1 text-sm text-red">{errors.fullName}</p>
+                <p id="fullName-error" className="mt-1 text-sm text-red">{errors.fullName}</p>
               )}
             </div>
 
             {/* Street Address */}
             <div>
-              <label className="block text-sm font-medium text-dark mb-2">
+              <label htmlFor="streetAddress" className="block text-sm font-medium text-dark mb-2">
                 Street Address
               </label>
               <textarea
+                id="streetAddress"
                 value={formData.streetAddress}
                 onChange={(e) => handleChange("streetAddress", e.target.value)}
                 placeholder="Street address, apt/suite number"
                 rows={2}
+                aria-describedby={errors.streetAddress ? "streetAddress-error" : undefined}
+                aria-invalid={!!errors.streetAddress}
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue focus:border-transparent ${
                   errors.streetAddress ? "border-red-500" : "border-gray-3"
                 }`}
               />
               {errors.streetAddress && (
-                <p className="mt-1 text-sm text-red">{errors.streetAddress}</p>
+                <p id="streetAddress-error" className="mt-1 text-sm text-red">{errors.streetAddress}</p>
               )}
             </div>
 
             {/* City and State */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-dark mb-2">
+                <label htmlFor="city" className="block text-sm font-medium text-dark mb-2">
                   City
                 </label>
                 <input
+                  id="city"
                   type="text"
                   value={formData.city}
                   onChange={(e) => handleChange("city", e.target.value)}
                   placeholder="e.g., New York"
+                  aria-describedby={errors.city ? "city-error" : undefined}
+                  aria-invalid={!!errors.city}
                   className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue focus:border-transparent ${
                     errors.city ? "border-red-500" : "border-gray-3"
                   }`}
                 />
                 {errors.city && (
-                  <p className="mt-1 text-sm text-red">{errors.city}</p>
+                  <p id="city-error" className="mt-1 text-sm text-red">{errors.city}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-dark mb-2">
+                <label htmlFor="state" className="block text-sm font-medium text-dark mb-2">
                   State
                 </label>
                 <input
+                  id="state"
                   type="text"
                   value={formData.state}
                   onChange={(e) => handleChange("state", e.target.value)}
                   placeholder="e.g., NY"
+                  aria-describedby={errors.state ? "state-error" : undefined}
+                  aria-invalid={!!errors.state}
                   className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue focus:border-transparent ${
                     errors.state ? "border-red-500" : "border-gray-3"
                   }`}
                 />
                 {errors.state && (
-                  <p className="mt-1 text-sm text-red">{errors.state}</p>
+                  <p id="state-error" className="mt-1 text-sm text-red">{errors.state}</p>
                 )}
               </div>
             </div>
 
             {/* ZIP Code */}
             <div>
-              <label className="block text-sm font-medium text-dark mb-2">
+              <label htmlFor="zipCode" className="block text-sm font-medium text-dark mb-2">
                 ZIP Code
               </label>
               <input
+                id="zipCode"
                 type="text"
                 value={formData.zipCode}
                 onChange={(e) => handleChange("zipCode", e.target.value)}
                 placeholder="e.g., 10001"
+                aria-describedby={errors.zipCode ? "zipCode-error" : undefined}
+                aria-invalid={!!errors.zipCode}
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue focus:border-transparent ${
                   errors.zipCode ? "border-red-500" : "border-gray-3"
                 }`}
               />
               {errors.zipCode && (
-                <p className="mt-1 text-sm text-red">{errors.zipCode}</p>
+                <p id="zipCode-error" className="mt-1 text-sm text-red">{errors.zipCode}</p>
               )}
             </div>
 
             {/* Phone Number */}
             <div>
-              <label className="block text-sm font-medium text-dark mb-2">
+              <label htmlFor="phoneNumber" className="block text-sm font-medium text-dark mb-2">
                 Phone Number
               </label>
               <input
+                id="phoneNumber"
                 type="tel"
                 value={formData.phoneNumber}
                 onChange={(e) => handleChange("phoneNumber", e.target.value)}
                 placeholder="+1 (555) 123-4567"
+                aria-describedby={errors.phoneNumber ? "phoneNumber-error" : undefined}
+                aria-invalid={!!errors.phoneNumber}
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue focus:border-transparent ${
                   errors.phoneNumber ? "border-red-500" : "border-gray-3"
                 }`}
               />
               {errors.phoneNumber && (
-                <p className="mt-1 text-sm text-red">{errors.phoneNumber}</p>
+                <p id="phoneNumber-error" className="mt-1 text-sm text-red">{errors.phoneNumber}</p>
               )}
             </div>
 

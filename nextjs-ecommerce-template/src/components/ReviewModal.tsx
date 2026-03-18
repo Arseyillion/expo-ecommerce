@@ -24,6 +24,10 @@ const ReviewModal = ({ isOpen, onClose, order }: ReviewModalProps) => {
     // Initialize ratings for all products to 0
     const initialRatings: { [key: string]: number } = {};
     order.orderItems.forEach((item) => {
+      if (!item.product?._id) {
+        // Skip items without product data
+        return;
+      }
       const productId = item.product._id;
       initialRatings[productId] = 0;
     });
@@ -53,7 +57,11 @@ const ReviewModal = ({ isOpen, onClose, order }: ReviewModalProps) => {
     if (!order || !user) return;
 
     // Check if all products are rated
-    const allRated = order.orderItems.every((item) => ratings[item.product._id] && ratings[item.product._id] > 0);
+    const allRated = order.orderItems.every((item) => {
+      if (!item.product?._id) return false; // Skip items without product data
+      const productId = item.product._id;
+      return ratings[productId] && ratings[productId] > 0;
+    });
     
     if (!allRated) {
       alert("Please rate all products before submitting.");
@@ -61,17 +69,37 @@ const ReviewModal = ({ isOpen, onClose, order }: ReviewModalProps) => {
     }
 
     try {
-      await Promise.all(
-        order.orderItems.map((item) =>
-          createReviewAsync({
-            productId: item.product._id,
+      const failedItems: string[] = [];
+      
+      // Process items sequentially to prevent partial writes
+      for (const item of order.orderItems) {
+        if (!item.product?._id) {
+          console.warn('Skipping item without product data');
+          continue;
+        }
+        
+        const productId = item.product._id;
+        
+        try {
+          await createReviewAsync({
+            productId: productId,
             orderId: order._id,
-            rating: ratings[item.product._id],
-            title: titles[item.product._id] || "",
-            comment: comments[item.product._id] || "",
-          })
-        )
-      );
+            rating: ratings[productId],
+            title: titles[productId] || "",
+            comment: comments[productId] || "",
+          });
+        } catch (error) {
+          console.error(`Failed to create review for product ${productId}:`, error);
+          failedItems.push(productId);
+          // Stop processing on first failure to prevent partial writes
+          break;
+        }
+      }
+
+      if (failedItems.length > 0) {
+        alert(`Failed to submit review for ${failedItems.length} product(s). Please try again.`);
+        return;
+      }
 
       alert("Thank you for rating all products!");
       onClose();
@@ -100,6 +128,7 @@ const ReviewModal = ({ isOpen, onClose, order }: ReviewModalProps) => {
                 console.log(`Star clicked: ${star} for product ${productId}`);
                 onRatingChange(star);
               }}
+              aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
               className="focus:outline-none transition-all duration-200 transform hover:scale-110"
             >
               <svg
@@ -132,16 +161,22 @@ const ReviewModal = ({ isOpen, onClose, order }: ReviewModalProps) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 lg:mt-20">
-      <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 lg:mt-20 ">
+      <div 
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="review-modal-title"
+        className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+      >
+        <div className="p-6 mt-40 lg:mt-0">
           <div className="flex justify-between items-center mb-6">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Rate Your Products</h2>
+              <h2 id="review-modal-title" className="text-2xl font-bold text-gray-900 mb-2">Rate Your Products</h2>
               <p className="text-gray-600 text-sm">Rate each product from your order</p>
             </div>
             <button
               onClick={onClose}
+              aria-label="Close review dialog"
               className="text-gray-400 hover:text-gray-600"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -151,73 +186,72 @@ const ReviewModal = ({ isOpen, onClose, order }: ReviewModalProps) => {
           </div>
 
           <div className="space-y-6">
-            {order?.orderItems.map((item) => (
-              <div key={item._id} className="border-b pb-6 last:border-b-0">
-                <div className="flex items-start space-x-4">
-                  <Image
-                    src={item.product?.imgs?.previews?.[0] || item.image || "/images/users/user-01.jpg"}
-                    alt={item.product?.title || item.name || "Product"}
-                    width={80}
-                    height={80}
-                    className="rounded-lg object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = "/images/users/user-01.jpg";
-                    }}
-                  />
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 mb-2">{item.product?.title || item.name}</h3>
-                    <p className="text-sm text-gray-600 mb-3">
-                      ${(item.product?.price || item.price).toFixed(2)} × {item.quantity}
-                    </p>
-                    
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Rating *
-                      </label>
-                      <StarRating
-                        rating={ratings[item.product._id] || 0}
-                        onRatingChange={(rating) => handleRatingChange(item.product._id, rating)}
-                        productId={item.product._id}
-                      />
-                      <div className="text-xs text-gray-500 mt-1">
-                        Current rating: {ratings[item.product._id] || 0}
-                      </div>
-                    </div>
-
-                    {/* <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Review Title (optional)
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                        placeholder="Summarize your experience"
-                        value={titles[item.product._id] || ""}
-                        onChange={(e) => handleTitleChange(item.product._id, e.target.value)}
-                        maxLength={100}
-                      />
-                    </div> */}
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Your Thoughts (optional)
-                      </label>
-                      <textarea
-                        rows={4}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                        placeholder="Share your experience with this product..."
-                        value={comments[item.product._id] || ""}
-                        onChange={(e) => handleCommentChange(item.product._id, e.target.value)}
-                        maxLength={1000}
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        {comments[item.product._id]?.length || 0}/1000 characters
+            {order?.orderItems.map((item, index) => {
+              const productId = item.product?._id;
+              
+              // Skip items without product data
+              if (!productId) {
+                return (
+                  <div key={index} className="border rounded-lg p-4 mb-4 bg-gray-50">
+                    <p className="text-gray-500">Product information unavailable</p>
+                  </div>
+                );
+              }
+              
+              return (
+                <div key={item._id} className="border-b pb-6 last:border-b-0">
+                  <div className="flex items-start space-x-4">
+                    <Image
+                      src={item.product?.imgs?.previews?.[0] || item.image || "/images/users/user-01.jpg"}
+                      alt={item.product?.title || item.name || "Product"}
+                      width={80}
+                      height={80}
+                      className="rounded-lg object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = "/images/users/user-01.jpg";
+                      }}
+                    />
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900 mb-2">{item.product?.title || item.name}</h3>
+                      <p className="text-sm text-gray-600 mb-3">
+                        ${(item.product?.price || item.price).toFixed(2)} × {item.quantity}
                       </p>
+                      
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Rating *
+                        </label>
+                        <StarRating
+                          rating={ratings[productId] || 0}
+                          onRatingChange={(rating) => handleRatingChange(productId, rating)}
+                          productId={productId}
+                        />
+                        <div className="text-xs text-gray-500 mt-1">
+                          Current rating: {ratings[productId] || 0}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Your Thoughts (optional)
+                        </label>
+                        <textarea
+                          rows={4}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="Share your experience with this product..."
+                          value={comments[productId] || ""}
+                          onChange={(e) => handleCommentChange(productId, e.target.value)}
+                          maxLength={1000}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          {comments[productId]?.length || 0}/1000 characters
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="flex justify-end space-x-3 mt-6">

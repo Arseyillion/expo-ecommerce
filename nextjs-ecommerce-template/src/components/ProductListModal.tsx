@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Order } from "../../hooks/useUserOrders";
@@ -14,6 +14,7 @@ interface ProductListModalProps {
 
 const ProductListModal = ({ isOpen, onClose, order }: ProductListModalProps) => {
   const router = useRouter();
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
   if (!isOpen || !order) return null;
 
@@ -49,23 +50,17 @@ const ProductListModal = ({ isOpen, onClose, order }: ProductListModalProps) => 
 
           <div className="space-y-4 ">
             {order.orderItems.map((item, index) => {
-              console.log(`Product item ${index}:`, {
-                product: item.product,
-                productId: item.product?._id,
-                itemKeys: Object.keys(item)
-              });
-              
               return (
                 <Link key={item._id} href={`/shop-details?id=${item.product?._id}`} className="border-b pb-4 last:border-b-0">
                   <div className="flex items-start space-x-4">
                     <Image
-                      src={item.product?.imgs?.previews?.[0] || item.image || "/images/users/user-01.jpg"}
+                      src={failedImages.has(item._id) ? "/images/users/user-01.jpg" : (item.product?.imgs?.previews?.[0] || item.image || "/images/users/user-01.jpg")}
                       alt={item.product?.title || item.name || "Product"}
                       width={80}
                       height={80}
                       className="rounded-lg object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = "/images/users/user-01.jpg";
+                      onError={() => {
+                        setFailedImages(prev => new Set(prev).add(item._id));
                       }}
                     />
                     <div className="flex-1">
