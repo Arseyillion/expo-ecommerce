@@ -45,7 +45,7 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
   // Escape key handling
   useEffect(() => {
     const handleEscapeKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === 'Escape' && !isProcessing) {
         onClose();
       }
     };
@@ -57,7 +57,7 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
     return () => {
       document.removeEventListener('keydown', handleEscapeKey);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, isProcessing]);
 
   const getSelectedAddress = (): Address | null => {
     if (!selectedAddressId) return null;

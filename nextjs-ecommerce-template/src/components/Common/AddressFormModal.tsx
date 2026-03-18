@@ -117,6 +117,7 @@ const AddressFormModal: React.FC<AddressFormModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSaving) return;
     if (validateForm()) {
       onSave(formData);
     }
@@ -330,11 +331,12 @@ const AddressFormModal: React.FC<AddressFormModalProps> = ({
 
             {/* Default Address Toggle */}
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <label className="text-sm font-medium text-dark">
+              <label htmlFor="isDefault" className="text-sm font-medium text-dark">
                 Set as default address
               </label>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
+                  id="isDefault"
                   type="checkbox"
                   checked={formData.isDefault}
                   onChange={(e) => handleChange("isDefault", e.target.checked)}

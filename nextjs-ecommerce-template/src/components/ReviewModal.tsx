@@ -58,7 +58,7 @@ const ReviewModal = ({ isOpen, onClose, order }: ReviewModalProps) => {
 
     // Check if all products are rated
     const allRated = order.orderItems.every((item) => {
-      if (!item.product?._id) return false; // Skip items without product data
+      if (!item.product?._id) return true; // Skip items without product data
       const productId = item.product._id;
       return ratings[productId] && ratings[productId] > 0;
     });
