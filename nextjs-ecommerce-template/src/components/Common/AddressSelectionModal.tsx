@@ -61,7 +61,7 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
     return () => {
       document.removeEventListener('keydown', handleEscapeKey);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, isProcessing]);
 
   const getSelectedAddress = (): Address | null => {
     if (!selectedAddressId) return null;
@@ -128,6 +128,7 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
               onClick={handleSafeClose}
               disabled={isProcessing}
               aria-disabled={isProcessing}
+              aria-label="Close address selection modal"
               className={`p-2 rounded-lg transition-colors ${
                 isProcessing 
                   ? 'opacity-50 cursor-not-allowed' 
