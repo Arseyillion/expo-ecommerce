@@ -43,12 +43,13 @@ export async function createFlutterwavePaymentIntent(req, res) {
           .json({ error: `Insufficient stock for ${product.name}` });
       }
 
-      subtotal += product.price * item.quantity;
+      const itemPrice = product.hasDiscount ? product.discountedPrice : product.price;
       validatedItems.push({
         productId: product._id.toString(),
         quantity: item.quantity,
-        price: product.price,
+        price: itemPrice,
       });
+      subtotal += itemPrice;
     }
 
     const shipping = 10;
@@ -195,9 +196,24 @@ export async function verifyFlutterwavePayment(req, res) {
 
             // Update product stock (only once when payment is confirmed)
             for (const item of order.orderItems) {
-              await Product.findByIdAndUpdate(item.product, {
-                $inc: { stock: -item.quantity },
-              });
+              const stockUpdateResult = await Product.updateOne(
+                { 
+                  _id: item.product, 
+                  stock: { $gte: item.quantity }
+                },
+                { 
+                  $inc: { stock: -item.quantity }
+                }
+              );
+              
+              if (stockUpdateResult.modifiedCount === 0) {
+                console.error(`[flutterwave] Stock update failed for product ${item.product}: insufficient stock or product not found`);
+                return res.status(400).json({ 
+                  success: false, 
+                  message: 'Insufficient stock for one or more items',
+                  error: `Product ${item.product} stock update failed - insufficient stock` 
+                });
+              }
             }
 
             console.log(`[flutterwave] Product stock updated for order ${order._id}`);
@@ -215,6 +231,11 @@ export async function verifyFlutterwavePayment(req, res) {
           }
         } catch (updateError) {
           console.error(`[flutterwave] Error updating order:`, updateError);
+          return res.status(500).json({ 
+            success: false, 
+            message: 'Order update failed', 
+            error: updateError.message 
+          });
         }
       }
     }

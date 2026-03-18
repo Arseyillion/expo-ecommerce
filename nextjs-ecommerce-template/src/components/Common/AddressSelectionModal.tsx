@@ -22,6 +22,7 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
 }) => {
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const isSubmittingRef = useRef<boolean>(false);
 
   // Reset and validate selection when addresses change or modal opens
   useEffect(() => {
@@ -30,6 +31,9 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
       if (modalRef.current) {
         modalRef.current.focus();
       }
+    } else {
+      // Reset reentrancy guard when modal closes
+      isSubmittingRef.current = false;
     }
     
     // Validate existing selection against current addresses
@@ -45,7 +49,7 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
   // Escape key handling
   useEffect(() => {
     const handleEscapeKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === 'Escape' && !isProcessing) {
         onClose();
       }
     };
@@ -65,8 +69,11 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
   };
 
   const handleProceed = () => {
+    if (isSubmittingRef.current) return;
+    
     const selectedAddress = getSelectedAddress();
     if (selectedAddress) {
+      isSubmittingRef.current = true;
       onProceed(selectedAddress);
     }
   };

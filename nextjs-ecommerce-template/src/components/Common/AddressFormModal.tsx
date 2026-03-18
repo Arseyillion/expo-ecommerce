@@ -117,6 +117,7 @@ const AddressFormModal: React.FC<AddressFormModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSaving) return;
     if (validateForm()) {
       onSave(formData);
     }

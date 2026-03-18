@@ -19,6 +19,8 @@ const ReviewModal = ({ isOpen, onClose, order }: ReviewModalProps) => {
   const [titles, setTitles] = useState<{ [key: string]: string }>({});
   const [comments, setComments] = useState<{ [key: string]: string }>({});
   const prevIsOpen = useRef(isOpen);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleOpenRating = (order: Order) => {
     // Initialize ratings for all products to 0
@@ -58,7 +60,7 @@ const ReviewModal = ({ isOpen, onClose, order }: ReviewModalProps) => {
 
     // Check if all products are rated
     const allRated = order.orderItems.every((item) => {
-      if (!item.product?._id) return false; // Skip items without product data
+      if (!item.product?._id) return true; // Treat items without product data as already reviewed
       const productId = item.product._id;
       return ratings[productId] && ratings[productId] > 0;
     });
@@ -69,35 +71,51 @@ const ReviewModal = ({ isOpen, onClose, order }: ReviewModalProps) => {
     }
 
     try {
-      const failedItems: string[] = [];
-      
-      // Process items sequentially to prevent partial writes
-      for (const item of order.orderItems) {
-        if (!item.product?._id) {
-          console.warn('Skipping item without product data');
-          continue;
-        }
-        
-        const productId = item.product._id;
-        
-        try {
-          await createReviewAsync({
+      // Build batch payload and track successful submissions
+      const reviewsPayload = order.orderItems
+        .filter(item => item.product?._id)
+        .map(item => {
+          const productId = item.product._id;
+          return {
             productId: productId,
-            orderId: order._id,
             rating: ratings[productId],
             title: titles[productId] || "",
             comment: comments[productId] || "",
+          };
+        });
+
+      if (reviewsPayload.length === 0) {
+        alert("No valid products to review.");
+        return;
+      }
+
+      // Process reviews idempotently - track successful productIds
+      const successfulProductIds = new Set<string>();
+      const failedProductIds: string[] = [];
+
+      for (const review of reviewsPayload) {
+        try {
+          // Create unique idempotent key using orderId + productId
+          const idempotentKey = `${order._id}-${review.productId}`;
+          
+          await createReviewAsync({
+            productId: review.productId,
+            orderId: order._id,
+            rating: review.rating,
+            title: review.title,
+            comment: review.comment,
           });
+
+          successfulProductIds.add(review.productId);
+          console.log(`Successfully created review for product ${review.productId}`);
         } catch (error) {
-          console.error(`Failed to create review for product ${productId}:`, error);
-          failedItems.push(productId);
-          // Stop processing on first failure to prevent partial writes
-          break;
+          console.error(`Failed to create review for product ${review.productId}:`, error);
+          failedProductIds.push(review.productId);
         }
       }
 
-      if (failedItems.length > 0) {
-        alert(`Failed to submit review for ${failedItems.length} product(s). Please try again.`);
+      if (failedProductIds.length > 0) {
+        alert(`Failed to submit reviews for ${failedProductIds.length} product(s). Reviews for ${successfulProductIds.size} product(s) were submitted successfully.`);
         return;
       }
 
@@ -107,7 +125,8 @@ const ReviewModal = ({ isOpen, onClose, order }: ReviewModalProps) => {
       setTitles({});
       setComments({});
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to submit reviews");
+      console.error("Failed to submit reviews:", error);
+      alert("Failed to submit reviews. Please try again.");
     }
   };
 
@@ -129,7 +148,7 @@ const ReviewModal = ({ isOpen, onClose, order }: ReviewModalProps) => {
                 onRatingChange(star);
               }}
               aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
-              className="focus:outline-none transition-all duration-200 transform hover:scale-110"
+              className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 transition-all duration-200 transform hover:scale-110"
             >
               <svg
                 className={`w-6 h-6 transition-colors duration-200 ${
@@ -158,11 +177,64 @@ const ReviewModal = ({ isOpen, onClose, order }: ReviewModalProps) => {
     prevIsOpen.current = isOpen;
   }, [isOpen, order]);
 
+  // Focus management and escape handling
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    const handleTabKey = (event: KeyboardEvent) => {
+      if (event.key === 'Tab') {
+        const modal = modalRef.current;
+        if (!modal) return;
+
+        const focusableElements = modal.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        
+        if (focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0] as HTMLElement;
+        const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+        if (event.shiftKey) {
+          if (document.activeElement === firstElement) {
+            event.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            event.preventDefault();
+            firstElement.focus();
+          }
+        }
+      }
+    };
+
+    // Set initial focus
+    if (closeButtonRef.current) {
+      closeButtonRef.current.focus();
+    }
+
+    document.addEventListener('keydown', handleEscapeKey);
+    document.addEventListener('keydown', handleTabKey);
+
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey);
+      document.removeEventListener('keydown', handleTabKey);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 lg:mt-20 ">
       <div 
+        ref={modalRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="review-modal-title"
@@ -175,6 +247,7 @@ const ReviewModal = ({ isOpen, onClose, order }: ReviewModalProps) => {
               <p className="text-gray-600 text-sm">Rate each product from your order</p>
             </div>
             <button
+              ref={closeButtonRef}
               onClick={onClose}
               aria-label="Close review dialog"
               className="text-gray-400 hover:text-gray-600"
