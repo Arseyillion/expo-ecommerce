@@ -22,6 +22,7 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
 }) => {
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const isSubmittingRef = useRef<boolean>(false);
 
   // Reset and validate selection when addresses change or modal opens
   useEffect(() => {
@@ -30,6 +31,9 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
       if (modalRef.current) {
         modalRef.current.focus();
       }
+    } else {
+      // Reset reentrancy guard when modal closes
+      isSubmittingRef.current = false;
     }
     
     // Validate existing selection against current addresses
@@ -64,10 +68,17 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
     return addresses.find(addr => addr._id === selectedAddressId) || null;
   };
 
-  const handleProceed = () => {
+  const handleProceed = async () => {
+    if (isSubmittingRef.current) return;
+    
     const selectedAddress = getSelectedAddress();
     if (selectedAddress) {
-      onProceed(selectedAddress);
+      isSubmittingRef.current = true;
+      try {
+        await onProceed(selectedAddress);
+      } finally {
+        isSubmittingRef.current = false;
+      }
     }
   };
 
