@@ -46,6 +46,7 @@ const AddressFormModal: React.FC<AddressFormModalProps> = ({
   useEffect(() => {
     const handleEscapeKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        if (isSaving) return;
         onClose();
       }
     };

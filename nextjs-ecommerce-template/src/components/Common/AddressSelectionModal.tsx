@@ -68,13 +68,17 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
     return addresses.find(addr => addr._id === selectedAddressId) || null;
   };
 
-  const handleProceed = () => {
+  const handleProceed = async () => {
     if (isSubmittingRef.current) return;
     
     const selectedAddress = getSelectedAddress();
     if (selectedAddress) {
       isSubmittingRef.current = true;
-      onProceed(selectedAddress);
+      try {
+        await onProceed(selectedAddress);
+      } finally {
+        isSubmittingRef.current = false;
+      }
     }
   };
 
