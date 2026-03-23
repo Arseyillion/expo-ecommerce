@@ -195,7 +195,7 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
                       : 'bg-cyan-500 text-white hover:bg-cyan-600'
                   }`}
                 >
-                  Add Your First Address
+                  Close
                 </button>
               </div>
             ) : (
