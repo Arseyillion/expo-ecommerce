@@ -45,6 +45,7 @@ const AddressCard: React.FC<AddressCardProps> = ({
           <button
             onClick={() => onEdit(address)}
             disabled={isUpdatingAddress || isDeletingAddress}
+            aria-label="Edit address"
             className="flex items-center justify-center w-10 h-10 rounded-lg border border-gray-3 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             title="Edit address"
           >
@@ -67,6 +68,7 @@ const AddressCard: React.FC<AddressCardProps> = ({
           <button
             onClick={() => onDelete(address._id, address.label)}
             disabled={isUpdatingAddress || isDeletingAddress}
+            aria-label="Delete address"
             className="flex items-center justify-center w-10 h-10 rounded-lg border border-red-200 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             title="Delete address"
           >
