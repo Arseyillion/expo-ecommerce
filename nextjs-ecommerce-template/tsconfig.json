@@ -24,7 +24,8 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@/hooks/*": ["./hooks/*"]
+      "@/hooks/*": ["./hooks/*"],
+      "@/lib/*": ["./lib/*"]
     }
   },
   "include": [

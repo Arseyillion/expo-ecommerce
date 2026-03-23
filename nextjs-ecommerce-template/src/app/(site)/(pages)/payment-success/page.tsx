@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import Link from "next/link";
@@ -9,6 +9,10 @@ const PaymentSuccess = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const api = useApi();
+
+  // Refs to prevent state updates after unmount and timeout cleanup
+  const isActiveRef = useRef(true);
+  const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [paymentStatus, setPaymentStatus] = useState<
     "verifying" | "success" | "failed"
@@ -24,28 +28,44 @@ const PaymentSuccess = () => {
       console.log("Verification response:", response.data);
 
       if (response && response.data && response.data.status === "success") {
-        setPaymentStatus("success");
-        setVerificationData(response.data.data);
+        // Guard state updates with isActive check
+        if (isActiveRef.current) {
+          setPaymentStatus("success");
+          setVerificationData(response.data.data);
+        }
 
         // Cart is automatically cleared by the backend after order creation
         // No need to manually clear it here
 
         // Redirect to orders page after 3 seconds
-        const redirectTimeout = setTimeout(() => {
-          router.push("/orders");
-        }, 3000);
+        if (isActiveRef.current) {
+          redirectTimeoutRef.current = setTimeout(() => {
+            if (isActiveRef.current) {
+              router.push("/orders");
+            }
+          }, 3000);
+        }
         
         // Return cleanup function
-        return () => clearTimeout(redirectTimeout);
+        return () => {
+          if (redirectTimeoutRef.current) {
+            clearTimeout(redirectTimeoutRef.current);
+            redirectTimeoutRef.current = null;
+          }
+        };
       } else {
-        setPaymentStatus("failed");
-        setError("Payment was not successful");
+        if (isActiveRef.current) {
+          setPaymentStatus("failed");
+          setError("Payment was not successful");
+        }
         return null;
       }
     } catch (error) {
       console.error("Verification failed:", error);
-      setPaymentStatus("failed");
-      setError("Failed to verify payment");
+      if (isActiveRef.current) {
+        setPaymentStatus("failed");
+        setError("Failed to verify payment");
+      }
       return null;
     }
   }, [api, router]);
@@ -59,14 +79,18 @@ const PaymentSuccess = () => {
     console.log(`txRef from flutter_wave: ${txRef}`);
 
     if (status && status !== "completed") {
-      setError(`Payment status: ${status}`);
+      if (isActiveRef.current) {
+        setError(`Payment status: ${status}`);
+      }
       return;
     }
 
     if (transactionId || txRef) {
       let cleanup: (() => void) | null = null;
       const verifyAndSetCleanup = async () => {
-        cleanup = await verifyPayment(transactionId || txRef || "");
+        if (isActiveRef.current) {
+          cleanup = await verifyPayment(transactionId || txRef || "");
+        }
       };
       verifyAndSetCleanup();
       
@@ -76,16 +100,25 @@ const PaymentSuccess = () => {
         }
       };
     } else {
-      setPaymentStatus("failed");
-      setError("No transaction ID found");
+      if (isActiveRef.current) {
+        setPaymentStatus("failed");
+        setError("No transaction ID found");
+      }
       return () => {};
     }
   }, [searchParams, verifyPayment]);
 
   useEffect(() => {
+    // Set up mounted flag and cleanup on unmount
+    isActiveRef.current = true;
+    
     return () => {
-      // Cleanup any pending timeouts on unmount
-      // This prevents router.push from running after component unmounts
+      // Mark as unmounted and clear any pending timeouts
+      isActiveRef.current = false;
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+        redirectTimeoutRef.current = null;
+      }
     };
   }, []);
 
